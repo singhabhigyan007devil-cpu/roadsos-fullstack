@@ -12,15 +12,32 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
+  "package": "com.abhi_7.roadsos",
+
+  "config": {
+    "googleMaps": {
+      "apiKey": "AIzaSyBC_zUEvvxfJvkKfnqeCZfasdDm0A0SQbw"
+    }
+  },
+
+  "permissions": [
+    "ACCESS_FINE_LOCATION",
+    "ACCESS_COARSE_LOCATION",
+    "CALL_PHONE",
+    "SEND_SMS",
+    "VIBRATE"
+  ],
+
+  "adaptiveIcon": {
+    "backgroundColor": "#E6F4FE",
+    "foregroundImage": "./assets/images/android-icon-foreground.png",
+    "backgroundImage": "./assets/images/android-icon-background.png",
+    "monochromeImage": "./assets/images/android-icon-monochrome.png"
+  },
+
+  "edgeToEdgeEnabled": true,
+  "predictiveBackGestureEnabled": false
+},
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
@@ -41,8 +58,13 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d24443aa-a495-4347-8a35-15fa874f0a54"
+      }
     }
   }
 }
