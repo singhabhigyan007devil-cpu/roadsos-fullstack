@@ -1,50 +1,169 @@
-# Welcome to your Expo app 👋
+# RoadSoS 🚨
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+AI-assisted road safety and emergency response platform built with Expo React Native.
 
-## Get started
+## Overview
 
-1. Install dependencies
+RoadSoS is a mobile-first road safety application designed to help users during roadside emergencies and accident situations. The app focuses on faster emergency response, real-time assistance, and location-aware safety features.
 
-   ```bash
-   npm install
-   ```
+This project was built as part of preparation for road safety innovation and hackathon initiatives.
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## Features
 
-In the output, you'll find options to open the app in a
+* 🚑 Emergency SOS support
+* 📍 Live location access
+* 🗺️ Google Maps integration
+* 📞 Quick emergency calling
+* 📡 Real-time location permissions
+* 📲 Expo React Native mobile app
+* 🔔 Safety-focused user experience
+* ⚡ Fast and lightweight UI
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Tech Stack
 
-## Get a fresh project
+### Frontend
 
-When you're ready, run:
+* React Native
+* Expo
+* Expo Router
+* TypeScript
+* React Navigation
+
+### APIs & Services
+
+* Google Maps API
+* Expo Location
+* AsyncStorage
+
+### Backend
+
+* Python backend services
+* API integrations
+
+---
+
+## Folder Structure
 
 ```bash
-npm run reset-project
+roadsos/
+│
+├── app/
+├── assets/
+├── backend/
+├── components/
+├── constants/
+├── hooks/
+├── scripts/
+├── package.json
+└── README.md
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## Installation
 
-To learn more about developing your project with Expo, look at the following resources:
+### 1. Clone the repository
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+git clone https://github.com/YOUR_USERNAME/roadsos.git
+```
 
-## Join the community
+### 2. Navigate into project
 
-Join our community of developers creating universal apps.
+```bash
+cd roadsos
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 3. Install dependencies
+
+```bash
+npm install
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+GOOGLE_MAPS_API_KEY=YOUR_API_KEY
+```
+
+> Do not commit `.env` files to GitHub.
+
+---
+
+## Run the Project
+
+### Start Expo
+
+```bash
+npx expo start --tunnel
+```
+
+### Android
+
+```bash
+npm run android
+```
+
+### Web
+
+```bash
+npm run web
+```
+
+---
+
+## Security
+
+* API keys are restricted using SHA-1 fingerprints.
+* `.env` files are excluded from Git tracking.
+* Sensitive credentials are not stored in the repository.
+
+---
+
+## Future Improvements
+
+* 🤖 AI accident severity analysis
+* 🧠 AI emergency assistant
+* 🚓 Nearby hospital and police station detection
+* 🎤 Voice-triggered SOS
+* 🌐 Community hazard reporting
+* 📊 Road safety analytics
+* 🔴 Crash hotspot alerts
+
+---
+
+## Screenshots
+
+Add screenshots of the app here.
+
+---
+
+## Contributing
+
+Contributions are welcome.
+
+1. Fork the project
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+---
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+## Author
+
+Built by Abhigyan Singh.
