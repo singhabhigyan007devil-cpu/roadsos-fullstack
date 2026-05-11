@@ -1,0 +1,74 @@
+import "dotenv/config";
+
+export default {
+  expo: {
+    name: "roadsos",
+    slug: "roadsos",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: "roadsos",
+    userInterfaceStyle: "automatic",
+    newArchEnabled: true,
+
+    ios: {
+      supportsTablet: true,
+    },
+
+    android: {
+      package: "com.abhi_7.roadsos",
+      config: {
+        googleMaps: {
+          apiKey: process.env.GOOGLE_MAPS_API_KEY,
+        },
+      },
+      permissions: [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CALL_PHONE",
+        "SEND_SMS",
+        "VIBRATE",
+      ],
+      adaptiveIcon: {
+        backgroundColor: "#E6F4FE",
+        foregroundImage: "./assets/images/android-icon-foreground.png",
+        backgroundImage: "./assets/images/android-icon-background.png",
+        monochromeImage: "./assets/images/android-icon-monochrome.png",
+      },
+      edgeToEdgeEnabled: true,
+      predictiveBackGestureEnabled: false,
+    },
+
+    web: {
+      output: "static",
+      favicon: "./assets/images/favicon.png",
+    },
+
+    plugins: [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/images/splash-icon.png",
+          imageWidth: 200,
+          resizeMode: "contain",
+          backgroundColor: "#ffffff",
+          dark: {
+            backgroundColor: "#000000",
+          },
+        },
+      ],
+    ],
+
+    experiments: {
+      typedRoutes: true,
+    },
+
+    extra: {
+      router: {},
+      eas: {
+        projectId: "d24443aa-a495-4347-8a35-15fa874f0a54",
+      },
+    },
+  },
+};
