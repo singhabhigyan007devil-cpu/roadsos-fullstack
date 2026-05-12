@@ -19,7 +19,7 @@ import {
   View,
 } from 'react-native';
 
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 import Animated, {
   FadeIn,
@@ -1533,6 +1533,7 @@ if (panel === 'calculator') {
   return (
     <View style={{ flex: 1 }}>
       <MapView
+      provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
         customMapStyle={isNight ? darkMapStyle : []}
         initialRegion={{
