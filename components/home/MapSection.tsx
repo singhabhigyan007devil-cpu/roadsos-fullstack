@@ -68,34 +68,25 @@ console.log("MAP PLACES:", places.length, places[0]);
     />
   </Marker>
 
-  {/* NEARBY PLACES */}
-{places.slice(0, 30).map((place, index) => {
-  const lat = Number(place.lat ?? place.latitude);
-  const lon = Number(place.lon ?? place.lng ?? place.longitude);
-
-  if (Number.isNaN(lat) || Number.isNaN(lon)) {
-    return null;
-  }
-
-  return (
-    <Marker
-      key={`${place.id || index}-${lat}-${lon}`}
-      coordinate={{
-        latitude: lat,
-        longitude: lon,
-      }}
-      title={place.name || "Nearby service"}
-      description={place.type || "Safety place"}
-      pinColor={
-        place.type === "hospital"
-          ? "#22C55E"
-          : place.type === "police"
-          ? "#3B82F6"
-          : "#F59E0B"
-      }
-    />
-  );
-})}
+{/* NEARBY PLACES */}
+{places.map((place: any, index: number) => (
+  <Marker
+    key={`${place.id}-${index}`}
+    coordinate={{
+      latitude: parseFloat(place.lat),
+      longitude: parseFloat(place.lon),
+    }}
+    title={place.name || "Nearby service"}
+    description={place.type || "Safety place"}
+    pinColor={
+      place.type === "hospital"
+        ? "#22C55E"
+        : place.type === "police"
+        ? "#3B82F6"
+        : "#F59E0B"
+    }
+  />
+))}
 
 </MapView>
 
