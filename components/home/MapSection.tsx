@@ -4,7 +4,6 @@ import MapView, {
     Marker,
     PROVIDER_GOOGLE,
 } from "react-native-maps";
-
 import Animated, {
     FadeIn,
 } from "react-native-reanimated";
@@ -50,24 +49,26 @@ console.log("MAP PLACES:", places.length, places[0]);
 >
 
   {/* USER LOCATION MARKER */}
-  <Marker
-    coordinate={{
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
+<Marker
+  coordinate={{
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+  }}
+>
+  <View
+    style={{
+      backgroundColor: "#e91f1f",
+      padding: 8,
+      borderRadius: 999,
+      borderWidth: 2,
+      borderColor: "white",
     }}
   >
-    <View
-      style={{
-        width: 18,
-        height: 18,
-        borderRadius: 999,
-        backgroundColor: "#DC2626",
-        borderWidth: 3,
-        borderColor: "white",
-      }}
-    />
-  </Marker>
-
+    <Text style={{ fontSize: 16 }}>
+      🛡️
+    </Text>
+  </View>
+</Marker>
 {/* NEARBY PLACES */}
 {places.map((place: any, index: number) => (
   <Marker
