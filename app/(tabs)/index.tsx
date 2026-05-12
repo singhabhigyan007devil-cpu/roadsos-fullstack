@@ -19,7 +19,7 @@ import {
   View,
 } from 'react-native';
 
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapSection from "@/components/home/MapSection";
 
 import Animated, {
   FadeIn,
@@ -27,6 +27,7 @@ import Animated, {
   SlideInDown,
   SlideOutDown,
 } from 'react-native-reanimated';
+
 
 type Place = {
   id: number;
@@ -1532,39 +1533,15 @@ if (panel === 'calculator') {
 
   return (
     <View style={{ flex: 1 }}>
-      <MapView
-      provider={PROVIDER_GOOGLE}
-        style={{ flex: 1 }}
-        customMapStyle={isNight ? darkMapStyle : []}
-        initialRegion={{
-          latitude,
-          longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
-      >
-        <Marker coordinate={{ latitude, longitude }} title="You are here" />
+     <MapSection
+  location={location}
+  places={places}
+  isNight={isNight}
+  theme={theme}
+  lifeMessages={lifeMessages}
+  lifeIndex={lifeIndex}
+/>
 
-        {places.map((place) => (
-          <Marker
-            key={`${place.id}-${place.lat}-${place.lon}`}
-            coordinate={{ latitude: place.lat, longitude: place.lon }}
-            pinColor={place.type === 'hospital' ? '#22C55E' : place.type === 'police' ? '#3B82F6' : '#F59E0B'}
-            title={place.name}
-          />
-        ))}
-      </MapView>
-
-      <Animated.View entering={FadeIn.duration(500)} style={{ position: 'absolute', top: 42, left: 16, right: 16 }}>
-        <BlurView intensity={95} tint={theme.glass} style={{ borderRadius: 28, padding: 18, overflow: 'hidden' }}>
-          <Text style={{ color: theme.text, fontSize: 28, fontWeight: '900' }}>ROADSoS 🚨</Text>
-          <Text style={{ color: theme.sub, marginTop: 4, fontSize: 14 }}>{isNight ? 'Night safety mode active' : 'Day safety mode active'}</Text>
-
-          <View style={{ marginTop: 12, backgroundColor: isNight ? '#111827' : '#FFFFFF', padding: 12, borderRadius: 18 }}>
-            <Text style={{ color: theme.text, fontWeight: '900', textAlign: 'center' }}>{lifeMessages[lifeIndex]}</Text>
-          </View>
-        </BlurView>
-      </Animated.View>
 
       <Animated.View entering={FadeIn.delay(300)} style={{ position: 'absolute', top: 180, left: 16, right: 16 }}>
         <TouchableOpacity activeOpacity={0.9} onPress={() => setPanel('risk')}>
