@@ -248,25 +248,32 @@ const handleCalculatorPress = (value: string) => {
   }, []);
 
   useEffect(() => {
-    Accelerometer.setUpdateInterval(500);
+  Accelerometer.setUpdateInterval(500);
 
-    const subscription = Accelerometer.addListener((data) => {
-      const totalForce = Math.abs(data.x) + Math.abs(data.y) + Math.abs(data.z);
+  const subscription = Accelerometer.addListener((data) => {
+    const totalForce =
+      Math.abs(data.x) + Math.abs(data.y) + Math.abs(data.z);
+
+    if (totalForce > 3.2 && !accidentDetected) {
       setLastForce(totalForce);
+      triggerAccidentMode();
+      return;
+    }
 
-      if (totalForce > 3.2 && !accidentDetected) {
-        triggerAccidentMode();
-      }
+    if (totalForce > 2.4 && !movementAlert && !accidentDetected) {
+      setLastForce(totalForce);
+      setMovementAlert(true);
+      setTimeout(() => setMovementAlert(false), 8000);
+      return;
+    }
 
-      if (totalForce > 2.4 && !movementAlert && !accidentDetected) {
-        setMovementAlert(true);
-        setTimeout(() => setMovementAlert(false), 8000);
-      }
-    });
+    if (totalForce < 1.8 && lastForce > 0) {
+      setLastForce(0);
+    }
+  });
 
-    return () => subscription.remove();
-  }, [accidentDetected,movementAlert]);
-
+  return () => subscription.remove();
+}, [accidentDetected, movementAlert, lastForce]);
   useEffect(() => {
   calculateDangerScore();
 }, [isNight, places, placesLoading, location, ghostMode, savedContacts, lastForce]);
@@ -352,10 +359,13 @@ if (!placesLoading) {
       reasons.push('Ghost Mode activated by user');
     }
 
-    if (lastForce > 2.4) {
-      score += 15;
-      reasons.push('Abnormal phone movement detected');
-    }
+    if (lastForce >= 3.2) {
+  score += 25;
+  reasons.push('Possible accident-level movement detected');
+} else if (lastForce >= 2.4) {
+  score += 10;
+  reasons.push('Abnormal phone movement detected');
+}
 
     if (savedContacts.length === 0) {
       score += 10;

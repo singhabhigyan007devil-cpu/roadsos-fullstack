@@ -18,6 +18,7 @@ type MapSectionProps = {
   theme: any;
   lifeMessages: string[];
   lifeIndex: number;
+  darkMapStyle: any[];
 };
 
  function MapSection({
@@ -27,6 +28,7 @@ type MapSectionProps = {
   theme,
   lifeMessages,
   lifeIndex,
+  darkMapStyle,
 }: MapSectionProps) {
   if (!location) return null;
 
@@ -35,8 +37,10 @@ type MapSectionProps = {
 
       {/* MAP */}
       <MapView
+      key={isNight ? "night-map" : "day-map"}
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
+         customMapStyle={isNight ? darkMapStyle : []}
         initialRegion={{
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
