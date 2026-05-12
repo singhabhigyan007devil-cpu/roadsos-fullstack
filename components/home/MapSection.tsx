@@ -31,7 +31,7 @@ type MapSectionProps = {
   darkMapStyle,
 }: MapSectionProps) {
   if (!location) return null;
-
+console.log("MAP PLACES:", places.length, places[0]);
   return (
     <View style={{ flex: 1 }}>
 
@@ -69,31 +69,33 @@ type MapSectionProps = {
   </Marker>
 
   {/* NEARBY PLACES */}
-  {places.slice(0, 30).map((place, index) => {
-    const lat = Number(place.lat ?? place.latitude);
-    const lon = Number(place.lon ?? place.lng ?? place.longitude);
+{places.slice(0, 30).map((place, index) => {
+  const lat = Number(place.lat ?? place.latitude);
+  const lon = Number(place.lon ?? place.lng ?? place.longitude);
 
-    if (!lat || !lon) return null;
+  if (Number.isNaN(lat) || Number.isNaN(lon)) {
+    return null;
+  }
 
-    return (
-      <Marker
-        key={`${place.id || index}-${lat}-${lon}`}
-        coordinate={{
-          latitude: lat,
-          longitude: lon,
-        }}
-        title={place.name || "Nearby service"}
-        description={place.type || "Safety place"}
-        pinColor={
-          place.type === "hospital"
-            ? "#22C55E"
-            : place.type === "police"
-            ? "#3B82F6"
-            : "#F59E0B"
-        }
-      />
-    );
-  })}
+  return (
+    <Marker
+      key={`${place.id || index}-${lat}-${lon}`}
+      coordinate={{
+        latitude: lat,
+        longitude: lon,
+      }}
+      title={place.name || "Nearby service"}
+      description={place.type || "Safety place"}
+      pinColor={
+        place.type === "hospital"
+          ? "#22C55E"
+          : place.type === "police"
+          ? "#3B82F6"
+          : "#F59E0B"
+      }
+    />
+  );
+})}
 
 </MapView>
 

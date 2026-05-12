@@ -360,13 +360,7 @@ if (!placesLoading) {
       score += 25;
       reasons.push('Ghost Mode activated by user');
     }
-if (lastForce >= 3.2) {
-  score += 25;
-  reasons.push("Possible crash-level movement detected");
-} else if (lastForce >= 2.4 && movementAlert) {
-  score += 10;
-  reasons.push("Temporary abnormal phone movement detected");
-}
+
 
     if (savedContacts.length === 0) {
       score += 10;
@@ -414,23 +408,34 @@ if (lastForce >= 3.2) {
     }
   };
 
-  const fetchNearbyPlaces = async (lat: number, lon: number) => {
+ const fetchNearbyPlaces = async (lat: number, lon: number) => {
   try {
     setPlacesLoading(true);
 
-    const response = await axios.get(`${BASE_URL}/nearby?lat=${lat}&lon=${lon}`, {
-      timeout: 7000,
+    console.log("FETCHING NEARBY:", lat, lon);
+    console.log("URL:", `${BASE_URL}/nearby?lat=${lat}&lon=${lon}`);
+
+    const response = await axios.get(`${BASE_URL}/nearby`, {
+      params: { lat, lon },
+      timeout: 15000,
     });
 
-    setPlaces(response.data.places || []);
-  } catch (error) {
-    console.log('NEARBY PLACES ERROR:', error);
+    console.log("NEARBY STATUS:", response.status);
+    console.log("NEARBY DATA:", response.data);
+
+    const nearbyPlaces = response.data?.places || [];
+
+    console.log("NEARBY COUNT:", nearbyPlaces.length);
+
+    setPlaces(nearbyPlaces);
+  } catch (error: any) {
+    console.log("NEARBY ERROR MESSAGE:", error?.message);
+    console.log("NEARBY ERROR DATA:", error?.response?.data);
     setPlaces([]);
   } finally {
     setPlacesLoading(false);
   }
 };
-
   const getLocalBotReply = (text: string) => {
     const lower = text.toLowerCase().trim();
     const hasAny = (words: string[]) => words.some((word) => lower.includes(word));
