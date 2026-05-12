@@ -45,4 +45,4 @@ app-example
 .env.*
 node_modules/
 .expo/
-dist/
+dist/android/app/src/main/res/values/strings.xml
