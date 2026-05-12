@@ -20,7 +20,7 @@ type MapSectionProps = {
   lifeIndex: number;
 };
 
-export default function MapSection({
+ function MapSection({
   location,
   places,
   isNight,
@@ -140,3 +140,4 @@ export default function MapSection({
     </View>
   );
 }
+export default React.memo(MapSection);
