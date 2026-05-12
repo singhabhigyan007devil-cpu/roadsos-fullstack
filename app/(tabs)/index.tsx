@@ -164,6 +164,7 @@ export default function HomeScreen() {
   const [tripAlertVisible, setTripAlertVisible] = useState(false);
 
   const accidentIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastForceRef = useRef(0);
 
   const BASE_URL = 'https://roadsos-backend-sieq.onrender.com';
 
@@ -248,11 +249,13 @@ const handleCalculatorPress = (value: string) => {
   }, []);
 
   useEffect(() => {
-  Accelerometer.setUpdateInterval(500);
+  Accelerometer.setUpdateInterval(700);
 
   const subscription = Accelerometer.addListener((data) => {
     const totalForce =
       Math.abs(data.x) + Math.abs(data.y) + Math.abs(data.z);
+
+    lastForceRef.current = totalForce;
 
     if (totalForce > 3.2 && !accidentDetected) {
       setLastForce(totalForce);
@@ -263,20 +266,19 @@ const handleCalculatorPress = (value: string) => {
     if (totalForce > 2.4 && !movementAlert && !accidentDetected) {
       setLastForce(totalForce);
       setMovementAlert(true);
-      setTimeout(() => setMovementAlert(false), 8000);
-      return;
-    }
 
-    if (totalForce < 1.8 && lastForce > 0) {
-      setLastForce(0);
+      setTimeout(() => {
+        setMovementAlert(false);
+        setLastForce(0);
+      }, 8000);
     }
   });
 
   return () => subscription.remove();
-}, [accidentDetected, movementAlert, lastForce]);
+}, [accidentDetected, movementAlert]);
   useEffect(() => {
   calculateDangerScore();
-}, [isNight, places, placesLoading, location, ghostMode, savedContacts, lastForce]);
+}, [isNight, places, placesLoading, location, ghostMode, savedContacts, lastForce,movementAlert]);
  const getTripInterval = () => {
   if (riskLevel === 'HIGH') return 60;
   if (riskLevel === 'MODERATE') return 300;
@@ -358,13 +360,12 @@ if (!placesLoading) {
       score += 25;
       reasons.push('Ghost Mode activated by user');
     }
-
-    if (lastForce >= 3.2) {
+if (lastForce >= 3.2) {
   score += 25;
-  reasons.push('Possible accident-level movement detected');
-} else if (lastForce >= 2.4) {
+  reasons.push("Possible crash-level movement detected");
+} else if (lastForce >= 2.4 && movementAlert) {
   score += 10;
-  reasons.push('Abnormal phone movement detected');
+  reasons.push("Temporary abnormal phone movement detected");
 }
 
     if (savedContacts.length === 0) {
