@@ -1,50 +1,149 @@
 import React from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
 type MedicalVaultProps = {
-  visible: boolean;
-  medicalInfo: any;
-  setMedicalInfo: (value: any) => void;
-  onSave: () => void;
-  onClose: () => void;
+  inputStyle: any;
+  bloodType: string;
+  allergies: string;
+  medications: string;
+  medicalConditions: string;
+  primaryContactName: string;
+  primaryContactPhone: string;
+  setBloodType: (value: string) => void;
+  setAllergies: (value: string) => void;
+  setMedications: (value: string) => void;
+  setMedicalConditions: (value: string) => void;
+  setPrimaryContactName: (value: string) => void;
+  setPrimaryContactPhone: (value: string) => void;
+  saveMedicalVault: () => void;
 };
 
-export default function MedicalVault({
-  visible,
-  medicalInfo,
-  setMedicalInfo,
-  onSave,
-  onClose,
+function MedicalVault({
+  inputStyle,
+  bloodType,
+  allergies,
+  medications,
+  medicalConditions,
+  primaryContactName,
+  primaryContactPhone,
+  setBloodType,
+  setAllergies,
+  setMedications,
+  setMedicalConditions,
+  setPrimaryContactName,
+  setPrimaryContactPhone,
+  saveMedicalVault,
 }: MedicalVaultProps) {
-  if (!visible) return null;
-
   return (
-    <View>
-      <Text>Medical Vault</Text>
+    <>
+      <Text style={{ color: "white", fontSize: 24, fontWeight: "900" }}>
+        Medical Vault ❤️
+      </Text>
 
-      <TextInput
-        value={medicalInfo?.bloodType || ""}
-        onChangeText={(text) =>
-          setMedicalInfo({ ...medicalInfo, bloodType: text })
-        }
-        placeholder="Blood Type"
-      />
+      <Text style={{ color: "#CBD5E1", marginTop: 4 }}>
+        Stored locally for responders during SOS.
+      </Text>
 
-      <TextInput
-        value={medicalInfo?.allergies || ""}
-        onChangeText={(text) =>
-          setMedicalInfo({ ...medicalInfo, allergies: text })
-        }
-        placeholder="Allergies"
-      />
+      <View
+        style={{
+          backgroundColor: "rgba(15,23,42,0.96)",
+          padding: 16,
+          borderRadius: 22,
+          marginTop: 18,
+        }}
+      >
+        <TextInput
+          placeholder="Blood Type e.g. O+"
+          placeholderTextColor="#94A3B8"
+          value={bloodType}
+          onChangeText={setBloodType}
+          style={[
+            inputStyle,
+            { backgroundColor: "#111827", color: "white" },
+          ]}
+        />
 
-      <Pressable onPress={onSave}>
-        <Text>Save</Text>
-      </Pressable>
+        <TextInput
+          placeholder="Allergies"
+          placeholderTextColor="#94A3B8"
+          value={allergies}
+          onChangeText={setAllergies}
+          style={[
+            inputStyle,
+            { backgroundColor: "#111827", color: "white" },
+          ]}
+        />
 
-      <Pressable onPress={onClose}>
-        <Text>Close</Text>
-      </Pressable>
-    </View>
+        <TextInput
+          placeholder="Current medications"
+          placeholderTextColor="#94A3B8"
+          value={medications}
+          onChangeText={setMedications}
+          multiline
+          style={[
+            inputStyle,
+            {
+              minHeight: 72,
+              backgroundColor: "#111827",
+              color: "white",
+            },
+          ]}
+        />
+
+        <TextInput
+          placeholder="Medical conditions e.g. Diabetes, Asthma"
+          placeholderTextColor="#94A3B8"
+          value={medicalConditions}
+          onChangeText={setMedicalConditions}
+          multiline
+          style={[
+            inputStyle,
+            {
+              minHeight: 72,
+              backgroundColor: "#111827",
+              color: "white",
+            },
+          ]}
+        />
+
+        <TextInput
+          placeholder="Primary contact name"
+          placeholderTextColor="#94A3B8"
+          value={primaryContactName}
+          onChangeText={setPrimaryContactName}
+          style={[
+            inputStyle,
+            { backgroundColor: "#111827", color: "white" },
+          ]}
+        />
+
+        <TextInput
+          placeholder="Primary contact phone"
+          placeholderTextColor="#94A3B8"
+          value={primaryContactPhone}
+          onChangeText={setPrimaryContactPhone}
+          keyboardType="phone-pad"
+          style={[
+            inputStyle,
+            { backgroundColor: "#111827", color: "white" },
+          ]}
+        />
+
+        <TouchableOpacity
+          onPress={saveMedicalVault}
+          style={{
+            backgroundColor: "#DC2626",
+            padding: 16,
+            borderRadius: 18,
+            marginTop: 14,
+          }}
+        >
+          <Text style={{ color: "white", textAlign: "center", fontWeight: "900" }}>
+            Save Medical Vault
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 }
+export default React.memo(MedicalVault);
