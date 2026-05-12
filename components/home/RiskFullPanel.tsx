@@ -12,7 +12,7 @@ type RiskFullPanelProps = {
   handleSOS: () => void;
 };
 
-export default function RiskFullPanel({
+function RiskFullPanel({
   panelTheme,
   riskScore,
   riskLevel,
@@ -132,3 +132,4 @@ export default function RiskFullPanel({
     </>
   );
 }
+export default React.memo(RiskFullPanel);
