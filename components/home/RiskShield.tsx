@@ -10,7 +10,7 @@ type RiskShieldProps = {
   onOpenRisk: () => void;
 };
 
-export default function RiskShield({
+function RiskShield({
   riskScore,
   riskLevel,
   theme,
@@ -80,3 +80,4 @@ export default function RiskShield({
     </Animated.View>
   );
 }
+export default React.memo(RiskShield);
