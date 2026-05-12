@@ -1356,6 +1356,7 @@ if (panel === 'calculator') {
   theme={theme}
   lifeMessages={lifeMessages}
   lifeIndex={lifeIndex}
+  darkMapStyle={darkMapStyle}
 />
 
 
