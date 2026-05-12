@@ -76,7 +76,7 @@ function RiskFullPanel({
         </Text>
 
         <Text style={{ color: panelTheme.sub, marginTop: 8, lineHeight: 22 }}>
-          • Movement force: {lastForce.toFixed(2)}
+          • Movement signal: Used only for accident detection
         </Text>
 
         <Text style={{ color: panelTheme.sub, marginTop: 4, lineHeight: 22 }}>

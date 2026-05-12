@@ -36,46 +36,66 @@ type MapSectionProps = {
     <View style={{ flex: 1 }}>
 
       {/* MAP */}
-      <MapView
-      key={isNight ? "night-map" : "day-map"}
-        provider={PROVIDER_GOOGLE}
-        style={{ flex: 1 }}
-         customMapStyle={isNight ? darkMapStyle : []}
-        initialRegion={{
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }}
-      >
-        {/* USER MARKER */}
-        <Marker
-          coordinate={{
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          }}
-          title="You are here"
-        />
+ <MapView
+  key={isNight ? "night-map" : "day-map"}
+  provider={PROVIDER_GOOGLE}
+  style={{ flex: 1 }}
+  customMapStyle={isNight ? darkMapStyle : []}
+  initialRegion={{
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  }}
+>
 
-        {/* NEARBY PLACES */}
-        {places.slice(0, 30).map((place, index) => (
-          <Marker
-            key={place.id || index}
-            coordinate={{
-              latitude: place.lat,
-              longitude: place.lon,
-            }}
-            title={place.name || "Nearby service"}
-            pinColor={
-              place.type === "hospital"
-                ? "#22C55E"
-                : place.type === "police"
-                ? "#3B82F6"
-                : "#F59E0B"
-            }
-          />
-        ))}
-      </MapView>
+  {/* USER LOCATION MARKER */}
+  <Marker
+    coordinate={{
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    }}
+  >
+    <View
+      style={{
+        width: 18,
+        height: 18,
+        borderRadius: 999,
+        backgroundColor: "#DC2626",
+        borderWidth: 3,
+        borderColor: "white",
+      }}
+    />
+  </Marker>
+
+  {/* NEARBY PLACES */}
+  {places.slice(0, 30).map((place, index) => {
+    const lat = Number(place.lat ?? place.latitude);
+    const lon = Number(place.lon ?? place.lng ?? place.longitude);
+
+    if (!lat || !lon) return null;
+
+    return (
+      <Marker
+        key={`${place.id || index}-${lat}-${lon}`}
+        coordinate={{
+          latitude: lat,
+          longitude: lon,
+        }}
+        title={place.name || "Nearby service"}
+        description={place.type || "Safety place"}
+        pinColor={
+          place.type === "hospital"
+            ? "#22C55E"
+            : place.type === "police"
+            ? "#3B82F6"
+            : "#F59E0B"
+        }
+      />
+    );
+  })}
+
+</MapView>
 
       {/* HEADER */}
       <Animated.View
