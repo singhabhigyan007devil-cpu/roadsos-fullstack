@@ -243,7 +243,7 @@ const handleCalculatorPress = (value: string) => {
   }, []);
 
   useEffect(() => {
-    Accelerometer.setUpdateInterval(300);
+    Accelerometer.setUpdateInterval(500);
 
     const subscription = Accelerometer.addListener((data) => {
       const totalForce = Math.abs(data.x) + Math.abs(data.y) + Math.abs(data.z);
@@ -260,7 +260,7 @@ const handleCalculatorPress = (value: string) => {
     });
 
     return () => subscription.remove();
-  }, [accidentDetected]);
+  }, [accidentDetected,movementAlert]);
 
   useEffect(() => {
   calculateDangerScore();
