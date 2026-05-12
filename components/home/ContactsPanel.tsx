@@ -22,7 +22,7 @@ type ContactsPanelProps = {
   deleteEmergencyContact: (contact: string) => void;
 };
 
-export default function ContactsPanel({
+function ContactsPanel({
   panelTheme,
   inputStyle,
   countryCodes,
@@ -184,3 +184,4 @@ export default function ContactsPanel({
     </>
   );
 }
+export default React.memo(ContactsPanel);
