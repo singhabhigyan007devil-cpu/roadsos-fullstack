@@ -19,13 +19,14 @@ import {
   View,
 } from 'react-native';
 
+import ChatbotPanel from "@/components/home/ChatbotPanel";
 import MapSection from "@/components/home/MapSection";
-
+import PanelModal from "@/components/home/PanelModal";
+import RiskShield from "@/components/home/RiskShield";
+import SOSPanel from "@/components/home/SOSPanel";
 import Animated, {
   FadeIn,
-  FadeOut,
-  SlideInDown,
-  SlideOutDown,
+  FadeOut
 } from 'react-native-reanimated';
 
 
@@ -919,47 +920,20 @@ Emergency Contacts:
   const openDigit = () => Linking.openURL('https://www.godigit.com/');
 
   const renderPanelContent = () => {
-    if (panel === 'chatbot') {
-      return (
-        <>
-          <Text style={{ color: panelTheme.text, fontSize: 24, fontWeight: '900' }}>ROADSoS AI Chatbot</Text>
-          <Text style={{ color: panelTheme.sub, marginTop: 4 }}>Ask for accident, first-aid, safety, or location guidance.</Text>
-
-          <View style={{ marginTop: 14 }}>
-            {chatMessages.map((item, index) => (
-              <View
-                key={`${item.role}-${index}`}
-                style={{
-                  alignSelf: item.role === 'user' ? 'flex-end' : 'flex-start',
-                  backgroundColor: item.role === 'user' ? '#2563EB' : isNight ? '#0F172A' : '#FFFFFF',
-                  padding: 12,
-                  borderRadius: 18,
-                  marginTop: 9,
-                  maxWidth: '88%',
-                  borderWidth: 1,
-                  borderColor: 'rgba(119,18,137,0.08)',
-                }}
-              >
-                <Text style={{ color: item.role === 'user' ? 'white' : theme.text, lineHeight: 20 }}>{item.text}</Text>
-              </View>
-            ))}
-          </View>
-
-          <TextInput
-            placeholder="Type your emergency question..."
-            placeholderTextColor={panelTheme.sub}
-            value={chatInput}
-            onChangeText={setChatInput}
-            style={inputStyle}
-            multiline
-          />
-
-          <TouchableOpacity onPress={sendChatMessage} style={{ backgroundColor: '#7C3AED', padding: 16, borderRadius: 18, marginTop: 12 }}>
-            <Text style={{ color: 'white', textAlign: 'center', fontWeight: '900' }}>{chatLoading ? 'Thinking...' : 'Send to AI'}</Text>
-          </TouchableOpacity>
-        </>
-      );
-    }
+    if (panel === "chatbot") {
+  return (
+    <ChatbotPanel
+      messages={chatMessages}
+      input={chatInput}
+      setInput={setChatInput}
+      onSend={sendChatMessage}
+      chatLoading={chatLoading}
+      panelTheme={panelTheme}
+      theme={theme}
+      isNight={isNight}
+    />
+  );
+}
 
     if (panel === 'contacts') {
       return (
@@ -1543,86 +1517,28 @@ if (panel === 'calculator') {
 />
 
 
-      <Animated.View entering={FadeIn.delay(300)} style={{ position: 'absolute', top: 180, left: 16, right: 16 }}>
-        <TouchableOpacity activeOpacity={0.9} onPress={() => setPanel('risk')}>
-          <BlurView intensity={92} tint={theme.glass} style={{ borderRadius: 22, padding: 13, overflow: 'hidden' }}>
-            <Text style={{ color: theme.sub, fontSize: 11, fontWeight: '800' }}>AI RISK SHIELD</Text>
-            <Text
-              style={{
-                color:
-                  riskLevel === 'HIGH'
-                    ? '#DC2626'
-                    : riskLevel === 'MODERATE'
-                    ? '#EA580C'
-                    : '#059669',
-                fontSize: 15,
-                fontWeight: '900',
-                marginTop: 4,
-              }}
-            >
-              {riskLevel === 'HIGH'
-                ? 'This area has elevated risk right now'
-                : riskLevel === 'MODERATE'
-                ? 'Moderate risk signals detected'
-                : 'Low risk around you'}
-            </Text>
-            <Text style={{ color: theme.text, fontSize: 12, marginTop: 3 }}>
-              Score: {riskScore}/100 • Tap for details
-            </Text>
-          </BlurView>
-        </TouchableOpacity>
-      </Animated.View>
+     <RiskShield
+  riskScore={riskScore}
+  riskLevel={riskLevel}
+  theme={theme}
+  onOpenRisk={() => setPanel("risk")}
+/>
+<SOSPanel
+  vehicleNumber={vehicleNumber}
+  onOpenAssist={() => setPanel("assist")}
+  onOpenVehicle={() => setPanel("vehicle")}
+  onOpenContacts={() => setPanel("contacts")}
+/>
 
-      <Animated.View entering={FadeIn.delay(450)} style={{ position: 'absolute', top: 258, left: 16, right: 16 }}>
-        <Animated.View
-  entering={FadeIn.delay(520)}
-  style={{ position: 'absolute', top: 330, left: 16, right: 16 }}
+
+
+<PanelModal
+  visible={Boolean(panel)}
+  onClose={() => setPanel(null)}
+  panelTheme={panelTheme}
 >
-  
-</Animated.View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <TouchableOpacity activeOpacity={0.86} onPress={() => setPanel('assist')} style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.96)', padding: 13, borderRadius: 20, marginRight: 6 }}>
-            <Text style={{ color: 'white', fontSize: 12, fontWeight: '800' }}>ROAD HELP</Text>
-            <Text style={{ color: '#CBD5E1', fontSize: 11, marginTop: 4 }}>Tow • Fuel • EV</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity activeOpacity={0.86} onPress={() => setPanel('vehicle')} style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.96)', padding: 13, borderRadius: 20, marginHorizontal: 6 }}>
-            <Text style={{ color: 'white', fontSize: 12, fontWeight: '800' }}>VEHICLE</Text>
-            <Text style={{ color: '#CBD5E1', fontSize: 11, marginTop: 4 }}>{vehicleNumber || 'Add details'}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity activeOpacity={0.86} onPress={() => setPanel('contacts')} style={{ flex: 1, backgroundColor: '#DC2626', padding: 13, borderRadius: 20, marginLeft: 6 }}>
-            <Text style={{ color: 'white', fontSize: 12, fontWeight: '800' }}>CONTACTS</Text>
-            <Text style={{ color: '#FECACA', fontSize: 11, marginTop: 4 }}>SOS Numbers</Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-
-      {panel && (
-        <Animated.View entering={SlideInDown.springify()} exiting={SlideOutDown} style={{ position: 'absolute', left: 16, right: 16, bottom: 80, top: 120 }}>
-          <BlurView
-            intensity={20}
-            tint="dark"
-            style={{
-              borderRadius: 30,
-              padding: 18,
-              overflow: 'hidden',
-              backgroundColor: panelTheme.background,
-              borderWidth: 1,
-              borderColor: panelTheme.border,
-            }}
-          >
-            <TouchableOpacity onPress={() => setPanel(null)} style={{ alignSelf: 'flex-end' }}>
-              <Text style={{ color: panelTheme.text, fontSize: 20, fontWeight: '900' }}>✕</Text>
-            </TouchableOpacity>
-
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120}}>
-              {renderPanelContent()}
-            </ScrollView>
-          </BlurView>
-        </Animated.View>
-      )}
-
+  {renderPanelContent()}
+</PanelModal>
       {accidentDetected && (
         <Animated.View entering={FadeIn} exiting={FadeOut} style={{ position: 'absolute', top: 260, left: 24, right: 24, zIndex: 9999 }}>
           <BlurView intensity={100} tint={theme.glass} style={{ borderRadius: 28, padding: 24, overflow: 'hidden', alignItems: 'center' }}>
