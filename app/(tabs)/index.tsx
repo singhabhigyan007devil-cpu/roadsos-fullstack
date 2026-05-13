@@ -1,23 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import * as Location from 'expo-location';
-const SunCalc = require('suncalc');
-
 import { BlurView } from 'expo-blur';
+import * as Location from 'expo-location';
 import { Accelerometer } from 'expo-sensors';
 import { useEffect, useRef, useState } from 'react';
-
 import {
   Alert,
-  Linking,
-  Platform,
-  ScrollView,
+  Linking, PanResponder, Platform, Animated as RNAnimated, ScrollView,
   Share,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+const SunCalc = require('suncalc');
 
 import ChatbotPanel from "@/components/home/ChatbotPanel";
 import ContactsPanel from "@/components/home/ContactsPanel";
@@ -29,7 +25,7 @@ import RiskShield from "@/components/home/RiskShield";
 import SOSPanel from "@/components/home/SOSPanel";
 import Animated, {
   FadeIn,
-  FadeOut
+  FadeOut,
 } from 'react-native-reanimated';
 
 
@@ -408,28 +404,27 @@ if (!placesLoading) {
     }
   };
 
- const fetchNearbyPlaces = async (lat: number, lon: number) => {
+const fetchNearbyPlaces = async (lat: number, lon: number) => {
   try {
     setPlacesLoading(true);
 
     console.log("FETCHING NEARBY:", lat, lon);
-    console.log("URL:", `${BASE_URL}/nearby?lat=${lat}&lon=${lon}`);
 
     const response = await axios.get(`${BASE_URL}/nearby`, {
       params: { lat, lon },
       timeout: 15000,
     });
 
-    console.log("NEARBY STATUS:", response.status);
-    console.log("NEARBY DATA:", response.data);
-
-    const nearbyPlaces = response.data?.places || [];
+    const nearbyPlaces = Array.isArray(response.data?.places)
+      ? response.data.places
+      : [];
 
     console.log("NEARBY COUNT:", nearbyPlaces.length);
+    console.log("FIRST PLACE:", nearbyPlaces[0]);
 
     setPlaces(nearbyPlaces);
   } catch (error: any) {
-    console.log("NEARBY ERROR MESSAGE:", error?.message);
+    console.log("NEARBY ERROR:", error?.message);
     console.log("NEARBY ERROR DATA:", error?.response?.data);
     setPlaces([]);
   } finally {
@@ -1342,6 +1337,94 @@ if (panel === 'calculator') {
 
     return null;
   };
+  const SlideAction = ({
+  label,
+  knobText,
+  knobColor,
+  trackColor,
+  onComplete,
+}: {
+  label: string;
+  knobText: string;
+  knobColor: string;
+  trackColor: string;
+  onComplete: () => void;
+}) => {
+  const slideX = useRef(new RNAnimated.Value(0)).current;
+  const maxSlide = 230;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+
+      onPanResponderMove: (_, gesture) => {
+        if (gesture.dx >= 0 && gesture.dx <= maxSlide) {
+          slideX.setValue(gesture.dx);
+        }
+      },
+
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dx > maxSlide * 0.7) {
+          RNAnimated.timing(slideX, {
+            toValue: maxSlide,
+            duration: 150,
+            useNativeDriver: false,
+          }).start(() => {
+            onComplete();
+            slideX.setValue(0);
+          });
+        } else {
+          RNAnimated.spring(slideX, {
+            toValue: 0,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    })
+  ).current;
+
+  return (
+    <View
+      style={{
+        width: '100%',
+        height: 60,
+        borderRadius: 999,
+        backgroundColor: trackColor,
+        marginTop: 14,
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      <Text
+        style={{
+          color: 'white',
+          fontWeight: '900',
+          fontSize: 15,
+          textAlign: 'center',
+        }}
+      >
+        Slide to {label}
+      </Text>
+
+      <RNAnimated.View
+        {...panResponder.panHandlers}
+        style={{
+          position: 'absolute',
+          left: 7,
+          transform: [{ translateX: slideX }],
+          width: 48,
+          height: 48,
+          borderRadius: 999,
+          backgroundColor: knobColor,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: 'white', fontWeight: '900' }}>{knobText}</Text>
+      </RNAnimated.View>
+    </View>
+  );
+};
 
   if (Platform.OS === 'web') {
     return (
@@ -1398,25 +1481,188 @@ if (panel === 'calculator') {
 >
   {renderPanelContent()}
 </PanelModal>
-      {accidentDetected && (
-        <Animated.View entering={FadeIn} exiting={FadeOut} style={{ position: 'absolute', top: 260, left: 24, right: 24, zIndex: 9999 }}>
-          <BlurView intensity={100} tint={theme.glass} style={{ borderRadius: 28, padding: 24, overflow: 'hidden', alignItems: 'center' }}>
-            <Text style={{ color: '#EF4444', fontSize: 28, fontWeight: '900' }}>Accident Detected 🚨</Text>
-            <Text style={{ color: panelTheme.text, marginTop: 12, fontSize: 20, fontWeight: '800' }}>Sending SOS in {countdown}s</Text>
+     {accidentDetected && (
+  <Animated.View
+    entering={FadeIn}
+    exiting={FadeOut}
+    style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 9999,
+      elevation: 9999,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(2,6,23,0.45)',
+    }}
+  >
+    <BlurView
+      intensity={85}
+      tint="dark"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      }}
+    />
 
-            <TouchableOpacity onPress={cancelAccidentAlert} style={{ marginTop: 20, backgroundColor: '#22C55E', paddingVertical: 14, paddingHorizontal: 26, borderRadius: 22 }}>
-              <Text style={{ color: 'white', fontWeight: '900', fontSize: 16 }}>I AM SAFE</Text>
-            </TouchableOpacity>
-          </BlurView>
-        </Animated.View>
-      )}
+    <View
+      style={{
+        width: '88%',
+        borderRadius: 36,
+        padding: 28,
+        alignItems: 'center',
+        backgroundColor: 'rgba(15,23,42,0.72)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.18)',
+      }}
+    >
+      <Text
+        style={{
+          color: 'white',
+          fontSize: 28,
+          fontWeight: '900',
+          textAlign: 'center',
+          lineHeight: 34,
+        }}
+      >
+        It looks like you’ve been in a crash.
+      </Text>
 
-      {flashlightActive && (
-        <TouchableOpacity activeOpacity={1} onPress={() => setFlashlightActive(false)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'white', zIndex: 2000, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: '#111827', fontSize: 24, fontWeight: '900' }}>Flashlight ON</Text>
-          <Text style={{ color: '#475569', marginTop: 8 }}>Tap anywhere to turn off</Text>
-        </TouchableOpacity>
-      )}
+      <Text
+        style={{
+          color: '#CBD5E1',
+          marginTop: 10,
+          fontSize: 14,
+          textAlign: 'center',
+        }}
+      >
+        ROADSoS will trigger emergency SOS if you don’t respond.
+      </Text>
+
+      <Text
+        style={{
+          color: '#FCA5A5',
+          marginTop: 18,
+          fontSize: 18,
+          fontWeight: '900',
+        }}
+      >
+        Sending SOS in {countdown}s
+      </Text>
+
+      {/* SOS SLIDE BUTTON */}
+      <SlideAction
+  label="Emergency Call"
+  knobText="SOS"
+  knobColor="#EF4444"
+  trackColor="rgba(220,38,38,0.45)"
+  onComplete={handleSOS}
+/>
+  
+
+      {/* I AM SAFE SLIDE BUTTON */}
+      <SlideAction
+  label="I am safe"
+  knobText="✓"
+  knobColor="#22C55E"
+  trackColor="rgba(148,163,184,0.28)"
+  onComplete={cancelAccidentAlert}
+/>
+        
+
+      
+       
+
+     <TouchableOpacity
+  onPress={cancelAccidentAlert}
+  activeOpacity={0.8}
+  style={{
+    marginTop: 22,
+    width: 58,
+    height: 58,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}
+>
+  <Text
+    style={{
+      color: 'white',
+      fontSize: 30,
+      fontWeight: '700',
+    }}
+  >
+    ×close
+  </Text>
+</TouchableOpacity>
+
+
+    </View>
+  </Animated.View>
+)}
+{flashlightActive && (
+  <TouchableOpacity
+    activeOpacity={1}
+    onPress={() => setFlashlightActive(false)}
+    style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(2,6,23,0.96)',
+      zIndex: 2000,
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}
+  >
+    <View
+      style={{
+        width: 120,
+        height: 120,
+        borderRadius: 999,
+        backgroundColor: '#FACC15',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#FACC15',
+        shadowOpacity: 0.9,
+        shadowRadius: 30,
+        elevation: 20,
+      }}
+    >
+      <Text style={{ fontSize: 42 }}>
+        🔦
+      </Text>
+    </View>
+
+    <Text
+      style={{
+        color: 'white',
+        fontSize: 26,
+        fontWeight: '900',
+        marginTop: 28,
+      }}
+    >
+      Flashlight ON
+    </Text>
+
+    <Text
+      style={{
+        color: '#CBD5E1',
+        marginTop: 8,
+        fontSize: 15,
+      }}
+    >
+      Tap anywhere to turn off
+    </Text>
+  </TouchableOpacity>
+)}
 
       {fakeCallActive && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#020617', zIndex: 2100, justifyContent: 'space-between', alignItems: 'center', paddingTop: 90, paddingBottom: 70 }}>

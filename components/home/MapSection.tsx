@@ -1,14 +1,8 @@
-import React from "react";
-import { Text, View } from "react-native";
-import MapView, {
-    Marker,
-    PROVIDER_GOOGLE,
-} from "react-native-maps";
-import Animated, {
-    FadeIn,
-} from "react-native-reanimated";
-
 import { BlurView } from "expo-blur";
+import React from "react";
+import { Linking, Text, View } from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 type MapSectionProps = {
   location: any;
@@ -20,7 +14,28 @@ type MapSectionProps = {
   darkMapStyle: any[];
 };
 
- function MapSection({
+const getDistanceKm = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+) => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+function MapSection({
   location,
   places,
   isNight,
@@ -30,68 +45,80 @@ type MapSectionProps = {
   darkMapStyle,
 }: MapSectionProps) {
   if (!location) return null;
-console.log("MAP PLACES:", places.length, places[0]);
+
+  const userLat = Number(location.coords.latitude);
+  const userLon = Number(location.coords.longitude);
+
   return (
     <View style={{ flex: 1 }}>
-
-      {/* MAP */}
- <MapView
-  key={isNight ? "night-map" : "day-map"}
-  provider={PROVIDER_GOOGLE}
-  style={{ flex: 1 }}
-  customMapStyle={isNight ? darkMapStyle : []}
-  initialRegion={{
-    latitude: location.coords.latitude,
-    longitude: location.coords.longitude,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
-  }}
->
-
-  {/* USER LOCATION MARKER */}
-<Marker
+      <MapView
+        key={isNight ? "night-map" : "day-map"}
+        provider={PROVIDER_GOOGLE}
+        style={{ flex: 1 }}
+        showsUserLocation={false}
+        followsUserLocation={true}
+        showsMyLocationButton={true}
+        customMapStyle={isNight ? darkMapStyle : []}
+        initialRegion={{
+          latitude: userLat,
+          longitude: userLon,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+      >
+        <Marker
   coordinate={{
-    latitude: location.coords.latitude,
-    longitude: location.coords.longitude,
+    latitude: userLat,
+    longitude: userLon,
   }}
->
-  <View
-    style={{
-      backgroundColor: "#e91f1f",
-      padding: 8,
-      borderRadius: 999,
-      borderWidth: 2,
-      borderColor: "white",
-    }}
-  >
-    <Text style={{ fontSize: 16 }}>
-      🛡️
-    </Text>
-  </View>
-</Marker>
-{/* NEARBY PLACES */}
-{places.map((place: any, index: number) => (
-  <Marker
-    key={`${place.id}-${index}`}
-    coordinate={{
-      latitude: parseFloat(place.lat),
-      longitude: parseFloat(place.lon),
-    }}
-    title={place.name || "Nearby service"}
-    description={place.type || "Safety place"}
-    pinColor={
-      place.type === "hospital"
-        ? "#22C55E"
-        : place.type === "police"
-        ? "#3B82F6"
-        : "#F59E0B"
-    }
-  />
-))}
+  pinColor="#EA4335"
+  title="You are here"
+  description="Current location"
+/>
 
-</MapView>
+        {places.slice(0, 50).map((place: any, index: number) => {
+          const lat = Number(place.lat);
+          const lon = Number(place.lon);
 
-      {/* HEADER */}
+          if (Number.isNaN(lat) || Number.isNaN(lon)) {
+            return null;
+          }
+
+          const distanceKm = getDistanceKm(userLat, userLon, lat, lon);
+
+          return (
+            <Marker
+              key={`${place.id || index}-${lat}-${lon}`}
+              coordinate={{
+                latitude: lat,
+                longitude: lon,
+              }}
+              title={
+                place.type === "police"
+                  ? `🚓 ${place.name || "Police Station"}`
+                  : place.type === "hospital"
+                  ? `🏥 ${place.name || "Hospital"}`
+                  : place.name || "Nearby service"
+              }
+              description={`${place.type || "Safety place"} • ${distanceKm.toFixed(
+                1
+              )} km away`}
+              pinColor={
+                place.type === "hospital"
+                  ? "#f41086"
+                  : place.type === "police"
+                  ? "#3B82F6"
+                  : "#F59E0B"
+              }
+              onCalloutPress={() => {
+                const url = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLon}&destination=${lat},${lon}&travelmode=driving`;
+                Linking.openURL(url);
+              }}
+            />
+          );
+        })}
+      </MapView>
+
       <Animated.View
         entering={FadeIn.duration(500)}
         style={{
@@ -127,17 +154,13 @@ console.log("MAP PLACES:", places.length, places[0]);
               fontSize: 14,
             }}
           >
-            {isNight
-              ? "Night safety mode active"
-              : "Day safety mode active"}
+            {isNight ? "Night safety mode active" : "Day safety mode active"}
           </Text>
 
           <View
             style={{
               marginTop: 12,
-              backgroundColor: isNight
-                ? "#111827"
-                : "#FFFFFF",
+              backgroundColor: isNight ? "#111827" : "#FFFFFF",
               padding: 12,
               borderRadius: 18,
             }}
@@ -154,8 +177,8 @@ console.log("MAP PLACES:", places.length, places[0]);
           </View>
         </BlurView>
       </Animated.View>
-
     </View>
   );
 }
+
 export default React.memo(MapSection);
