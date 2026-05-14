@@ -77,9 +77,8 @@ function MapSection({
 />
 
         {places.slice(0, 50).map((place: any, index: number) => {
-          const lat = Number(place.lat);
-          const lon = Number(place.lon);
-
+          const lat = Number(place.latitude);
+const lon = Number(place.longitude);
           if (Number.isNaN(lat) || Number.isNaN(lon)) {
             return null;
           }
