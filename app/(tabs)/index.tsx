@@ -104,7 +104,7 @@ export default function HomeScreen() {
   const [message, setMessage] = useState('Loading ROADSoS...');
   const [panel, setPanel] = useState<Panel>(null);
   const [isNight, setIsNight] = useState(false);
-  const [ghostMode, setGhostMode] = useState(false);
+  const [covertMode, setCovertMode] = useState(false);
   const [calculatorInput, setCalculatorInput] = useState('');
   const SECRET_CALC_PIN = '112=';
   const [chatInput, setChatInput] = useState('');
@@ -155,8 +155,8 @@ export default function HomeScreen() {
   const [movementAlert, setMovementAlert] = useState(false);
   const [lastForce, setLastForce] = useState(0);
 
-  const [tripMode, setTripMode] = useState(false);
-  const [tripCheckTime, setTripCheckTime] = useState(300);
+  const [protectedJourney, setProtectedJourney] = useState(false);
+  const [journeyCheckTime, setjourneyCheckTime] = useState(300);
   const [tripAlertVisible, setTripAlertVisible] = useState(false);
 
   const accidentIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -179,22 +179,26 @@ export default function HomeScreen() {
   };
 const triggerSilentSOS = async () => {
   try {
+    setCovertMode(true);
+    setProtectedJourney(true);
+    setPanel(null);
+
     const phone = savedContacts[0];
 
-    if (!phone) return;
+    if (!phone) {
+      Alert.alert(
+        'Protected Journey Active',
+        'Covert safety tracking is active. Add an emergency contact for silent SMS escalation.'
+      );
+      return;
+    }
 
-    const message = encodeURIComponent(
-      createEmergencyMessage()
-    );
+    const message = encodeURIComponent(createEmergencyMessage());
+    const separator = Platform.OS === 'ios' ? '&' : '?';
 
-    Linking.openURL(
-      `sms:${phone}?body=${message}`
-    );
-
-    setGhostMode(true);
-
+    Linking.openURL(`sms:${phone}${separator}body=${message}`);
   } catch (error) {
-    console.log(error);
+    console.error('Covert Mode activation failed', error);
   }
 };
 const handleCalculatorPress = (value: string) => {
@@ -274,7 +278,7 @@ const handleCalculatorPress = (value: string) => {
 }, [accidentDetected, movementAlert]);
   useEffect(() => {
   calculateDangerScore();
-}, [isNight, places, placesLoading, location, ghostMode, savedContacts, lastForce,movementAlert]);
+}, [isNight, places, placesLoading, location, covertMode, savedContacts, lastForce,movementAlert]);
 useEffect(() => {
   return () => {
     if (locationWatcher.current) {
@@ -288,17 +292,17 @@ const getTripInterval = () => {
   return 900;
 };
   useEffect(() => {
-  if (!tripMode || tripAlertVisible) return;
+  if (!protectedJourney || tripAlertVisible) return;
 
   const intervalTime = getTripInterval();
 
-  setTripCheckTime(intervalTime);
+  setjourneyCheckTime(intervalTime);
 
   let timer = intervalTime;
 
   const interval = setInterval(() => {
     timer -= 1;
-    setTripCheckTime(timer);
+    setjourneyCheckTime(timer);
 
     if (timer <= 0) {
       clearInterval(interval);
@@ -317,7 +321,7 @@ const getTripInterval = () => {
   }, 1000);
 
   return () => clearInterval(interval);
-}, [tripMode, tripAlertVisible, riskLevel]);
+}, [protectedJourney, tripAlertVisible, riskLevel]);
 const formatTripTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -340,26 +344,23 @@ const formatTripTime = (seconds: number) => {
     reasons.push('Night-time travel detected');
   }
 
-  if (!placesLoading) {
-    if (!hasHospitalNearby) {
-      score += 15;
-      reasons.push('No nearby hospital found');
-    } else {
-      score -= 10;
-      reasons.push('Hospital nearby');
-    }
-
-    if (!hasPoliceNearby) {
-      score += 15;
-      reasons.push('No nearby police help found');
-    } else {
-      score -= 10;
-      reasons.push('Police help nearby');
-    }
+ if (!placesLoading) {
+  if (!hasHospitalNearby) {
+    score += 15;
+    reasons.push('No nearby hospital found');
   } else {
-    reasons.push('Nearby safety places loading...');
+    reasons.push('Hospital nearby');
   }
 
+  if (!hasPoliceNearby) {
+    score += 15;
+    reasons.push('No nearby police help found');
+  } else {
+    reasons.push('Police help nearby');
+  }
+} else {
+  reasons.push('Nearby safety places loading...');
+}
   const speedKmh = location?.coords?.speed
     ? Math.max(0, location.coords.speed * 3.6)
     : 0;
@@ -369,9 +370,9 @@ const formatTripTime = (seconds: number) => {
     reasons.push('High-speed movement detected');
   }
 
-  if (ghostMode) {
+  if (covertMode) {
     score += 25;
-    reasons.push('Ghost Mode activated by user');
+    reasons.push('Covert Mode activated by user');
   }
 
   if (savedContacts.length === 0) {
@@ -463,7 +464,7 @@ const getLocationAndPlaces = async () => {
         }
       );
   } catch (error) {
-    console.log(error);
+    console.error('Location tracking failed', error);
 
     setMessage(
       'Turn on device location/GPS and retry'
@@ -476,7 +477,7 @@ const fetchNearbyPlaces = async (lat: number, lon: number) => {
   try {
     setPlacesLoading(true);
 
-    console.log("FETCHING NEARBY:", lat, lon, BASE_URL);
+    
 
     const response = await axios.get(`${BASE_URL}/nearby`, {
       params: {
@@ -487,7 +488,7 @@ const fetchNearbyPlaces = async (lat: number, lon: number) => {
       timeout: 15000,
     });
 
-    console.log("NEARBY RESPONSE:", response.data);
+    
 
     const nearbyPlaces = Array.isArray(response.data?.places)
       ? response.data.places.slice(0, 25)
@@ -495,14 +496,7 @@ const fetchNearbyPlaces = async (lat: number, lon: number) => {
 
     setPlaces(nearbyPlaces);
   } catch (error: any) {
-    console.log("NEARBY ERROR FULL:", {
-      message: error?.message,
-      code: error?.code,
-      status: error?.response?.status,
-      data: error?.response?.data,
-      url: `${BASE_URL}/nearby?lat=${lat}&lon=${lon}&radius=2500`,
-    });
-
+   console.log("NEARBY ERROR FULL:", error);
     setPlaces([]);
   } finally {
     setPlacesLoading(false);
@@ -612,7 +606,7 @@ const fetchNearbyPlaces = async (lat: number, lon: number) => {
         setChatMessages((prev) => [...prev, { role: 'bot', text: response.data.reply }]);
       }
     } catch (error: any) {
-      console.log('CHAT ERROR:', error?.message, error?.response?.data);
+      console.error('CHAT ERROR:', error?.message);
     } finally {
       setChatLoading(false);
     }
@@ -660,8 +654,8 @@ const fetchNearbyPlaces = async (lat: number, lon: number) => {
       setVehicleNumber(parsed.vehicleNumber || '');
       setVehicleType(parsed.vehicleType || 'Car');
       setFuelType(parsed.fuelType || 'Petrol');
-    } catch {
-      console.log('Vehicle profile load failed');
+    } catch(error) {
+      console.error('Vehicle profile load failed',error);
     }
   };
 
@@ -681,8 +675,8 @@ const fetchNearbyPlaces = async (lat: number, lon: number) => {
       setLicenseHolderName(parsed.licenseHolderName || '');
       setLicenseValidTill(parsed.licenseValidTill || '');
       setLicenseLinked(Boolean(parsed.licenseLinked));
-    } catch {
-      console.log('Driving license load failed');
+    } catch(error) {
+      console.error('Driving license load failed',error);
     }
   };
 
@@ -737,8 +731,8 @@ const fetchNearbyPlaces = async (lat: number, lon: number) => {
       setMedicalConditions(parsed.medicalConditions || '');
       setPrimaryContactName(parsed.primaryContactName || '');
       setPrimaryContactPhone(parsed.primaryContactPhone || '');
-    } catch {
-      console.log('Medical vault load failed');
+    } catch (error){
+      console.error('Medical vault load failed',error);
     }
   };
 
@@ -757,20 +751,10 @@ const fetchNearbyPlaces = async (lat: number, lon: number) => {
   };
 
   const startFakeCall = () => setFakeCallActive(true);
-
-  const activateGhostMode = async () => {
-    setGhostMode(true);
-
-    try {
-      const shareMessage = location
-        ? `⚠️ Ghost Mode Activated\n\nI may feel unsafe.\nPlease track my location:\nhttps://maps.google.com/?q=${location.coords.latitude},${location.coords.longitude}`
-        : '⚠️ Ghost Mode Activated. I may feel unsafe.';
-
-      await Share.share({ message: shareMessage });
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  
+const activateCovertMode = async () => {
+  setPanel('calculator');
+};
 
   const startVoiceSOS = () => {
     setVoiceSOSActive(true);
@@ -826,10 +810,10 @@ const fetchNearbyPlaces = async (lat: number, lon: number) => {
       const response = await axios.post(`${BASE_URL}/assistance`, payload, { timeout: 8000 });
       Alert.alert('Request Sent', response?.data?.message || 'Assistance request created successfully.');
     } catch (error: any) {
-      console.log('ASSISTANCE ERROR:', error?.message, error?.response?.data);
+      console.error('ASSISTANCE ERROR:', error?.message);
       Alert.alert(
         'Request Failed',
-        error?.response?.data?.detail || error?.message || 'Backend not reachable. Check BASE_URL, WiFi, and FastAPI host.'
+        error?.response?.data?.detail || error?.message || 'Unable to connect to emergency assistance services. Please check your internet connection and try again.'
       );
     }
   };
@@ -1273,7 +1257,7 @@ if (panel === "vault") {
       riskReasons={riskReasons}
       lastForce={lastForce}
       savedContacts={savedContacts}
-      ghostMode={ghostMode}
+      ghostMode={covertMode}
       handleSOS={handleSOS}
     />
   );
@@ -1344,26 +1328,6 @@ if (panel === 'calculator') {
             <Text style={{ color: 'white', marginTop: 6, fontSize: 11, fontWeight: '900' }}>Flashlight</Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          onPress={() => setPanel('calculator')}
-          style={{
-            backgroundColor: '#020617',
-            padding: 15,
-            borderRadius: 18,
-            marginTop: 14,
-            alignItems: 'center',
-            borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.12)',
-          }}
-        >
-          <Text style={{ color: 'white', fontWeight: '900' }}>
-            🧮 Calculator SafeTrigger
-          </Text>
-          <Text style={{ color: '#94A3B8', marginTop: 4, fontSize: 12 }}>
-            Opens fake calculator for hidden SOS
-          </Text>
-        </TouchableOpacity>
       </View>
 
       <View style={{ backgroundColor: panelTheme.chip, padding: 16, borderRadius: 20, marginTop: 14 }}>
@@ -1532,6 +1496,7 @@ if (panel === 'calculator') {
   lifeMessages={lifeMessages}
   lifeIndex={lifeIndex}
   darkMapStyle={darkMapStyle}
+  onStartJourney={activateCovertMode}
 />
 
 
@@ -1539,11 +1504,14 @@ if (panel === 'calculator') {
   riskScore={riskScore}
   riskLevel={riskLevel}
   theme={theme}
+  ghostMode={covertMode}
   onOpenRisk={() => setPanel("risk")}
 />
 <SOSPanel
   vehicleNumber={vehicleNumber}
-  onOpenAssist={() => setPanel("assist")}
+  protectedJourney={protectedJourney}
+  journeyCheckTime={journeyCheckTime}
+  onStartJourney={activateCovertMode}
   onOpenVehicle={() => setPanel("vehicle")}
   onOpenContacts={() => setPanel("contacts")}
 />
@@ -1671,10 +1639,10 @@ if (panel === 'calculator') {
     style={{
       color: 'white',
       fontSize: 30,
-      fontWeight: '700',
+      fontWeight: '300',
     }}
   >
-    ×close
+    × 
   </Text>
 </TouchableOpacity>
 
@@ -1832,7 +1800,7 @@ if (panel === 'calculator') {
           }}
         >
           <Text style={{ color: 'white', fontSize: 22, fontWeight: '900' }}>
-            Safety Check-In 🛡️
+            Protected Journey Check 🛡️
           </Text>
 
           <Text
@@ -1843,13 +1811,13 @@ if (panel === 'calculator') {
               lineHeight: 22,
             }}
           >
-            ROADSoS is checking if you are safe during your trip.
+            ROADSoS is verifying your protected journey status.
           </Text>
 
           <TouchableOpacity
             onPress={() => {
               setTripAlertVisible(false);
-              setTripMode(true);
+              setProtectedJourney(true);
             }}
             style={{
               backgroundColor: '#22C55E',
@@ -1879,7 +1847,7 @@ if (panel === 'calculator') {
 
       <TouchableOpacity
         onPress={() => {
-          setTripMode((prev) => !prev);
+          setProtectedJourney((prev) => !prev);
           setTripAlertVisible(false);
         }}
         activeOpacity={0.86}
@@ -1887,7 +1855,7 @@ if (panel === 'calculator') {
           position: 'absolute',
           bottom: 86,
           right: 16,
-          backgroundColor: tripMode ? '#DC2626' : '#2563EB',
+          backgroundColor: protectedJourney ? '#DC2626' : '#2563EB',
           paddingVertical: 12,
           paddingHorizontal: 16,
           borderRadius: 20,
@@ -1895,28 +1863,12 @@ if (panel === 'calculator') {
           elevation: 8,
         }}
       >
-        <Text style={{ color: 'white', fontWeight: '900', fontSize: 12 }}>
-          {tripMode ? 'End Trip' : 'Start Trip'}
-        </Text>
-        {tripMode && (
-          <Text style={{ color: '#DBEAFE', fontWeight: '800', fontSize: 10, marginTop: 2 }}>
-            {formatTripTime(tripCheckTime)}
-          </Text>
-        )}
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={activateGhostMode} activeOpacity={0.86} style={{ position: 'absolute', top: 335, right: 16, backgroundColor: '#111827', width: 70, height: 70, borderRadius: 35, justifyContent: 'center', alignItems: 'center', zIndex: 1100 }}>
-        <Text style={{ fontSize: 26 }}>👻</Text>
-        <Text style={{ color: 'white', fontSize: 9, fontWeight: '900' }}>Ghost</Text>
-      </TouchableOpacity>
+     
 
-      {ghostMode && (
-        <TouchableOpacity activeOpacity={1} onLongPress={() => setGhostMode(false)} delayLongPress={3000} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#87CEEB', zIndex: 2500, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: 56 }}>🌤️</Text>
-          <Text style={{ color: '#0F172A', fontSize: 24, fontWeight: '900', marginTop: 12 }}>Normal Screen</Text>
-          <Text style={{ color: '#334155', marginTop: 8, textAlign: 'center' }}>Long press for 3 seconds to exit Ghost Mode.</Text>
-        </TouchableOpacity>
-      )}
+
+ 
 
       <View style={{ position: 'absolute', bottom: 12, left: 0, right: 0 }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12 }}>
@@ -1973,31 +1925,7 @@ if (panel === 'calculator') {
     elevation: 30,
   }}
 >
-  <TouchableOpacity
-    activeOpacity={0.9}
-    onPress={() => setPanel('calculator')}
-    style={{
-      width: 74,
-      height: 74,
-      borderRadius: 37,
-      backgroundColor: '#020617',
-      justifyContent: 'center',
-      alignItems: 'center',
-
-      borderWidth: 1.5,
-      borderColor: 'rgba(255,255,255,0.18)',
-
-      shadowColor: '#000',
-      shadowOpacity: 0.45,
-      shadowRadius: 16,
-      shadowOffset: {
-        width: 0,
-        height: 10,
-      },
-    }}
-  >
-    <Text style={{ fontSize: 30 }}>🧮</Text>
-  </TouchableOpacity>
+ 
 
   <View
     style={{
@@ -2009,16 +1937,7 @@ if (panel === 'calculator') {
       borderRadius: 999,
     }}
   >
-    <Text
-      style={{
-        color: 'white',
-        fontSize: 10,
-        fontWeight: '900',
-        letterSpacing: 1,
-      }}
-    >
-      SAFE CALC
-    </Text>
+   
   </View>
 </Animated.View>
     </View>
