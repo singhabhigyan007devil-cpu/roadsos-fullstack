@@ -162,7 +162,7 @@ export default function HomeScreen() {
   const accidentIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastForceRef = useRef(0);
 
-  const BASE_URL = 'https://roadsos-backend-sieq.onrender.com';
+  const BASE_URL = 'https://asia-south1-roadsos-core.cloudfunctions.net';
 
   const theme = isNight
     ? { text: '#F8FAFC', sub: '#CBD5E1', input: '#1E293B', chip: '#334155', glass: 'dark' as const }
@@ -275,7 +275,14 @@ const handleCalculatorPress = (value: string) => {
   useEffect(() => {
   calculateDangerScore();
 }, [isNight, places, placesLoading, location, ghostMode, savedContacts, lastForce,movementAlert]);
- const getTripInterval = () => {
+useEffect(() => {
+  return () => {
+    if (locationWatcher.current) {
+      locationWatcher.current.remove();
+    }
+  };
+}, []);
+const getTripInterval = () => {
   if (riskLevel === 'HIGH') return 60;
   if (riskLevel === 'MODERATE') return 300;
   return 900;
@@ -318,65 +325,74 @@ const formatTripTime = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
   const calculateDangerScore = () => {
-    let score = 0;
-    const reasons: string[] = [];
+  let score = 0;
+  const reasons: string[] = [];
 
-    if (isNight) {
-      score += 25;
-      reasons.push('Night-time travel detected');
-    }
+  const nearbyHospitals = places.filter((place) => place.type === 'hospital').length;
+  const nearbyPolice = places.filter((place) => place.type === 'police').length;
 
-    const nearbyHospitals = places.filter((place) => place.type === 'hospital').length;
-const nearbyPolice = places.filter((place) => place.type === 'police').length;
+  const hasHospitalNearby = nearbyHospitals > 0;
+  const hasPoliceNearby = nearbyPolice > 0;
+  const hasSafetyNearby = hasHospitalNearby && hasPoliceNearby;
 
-if (!placesLoading) {
-  if (nearbyHospitals === 0) {
-    score += 15;
-    reasons.push('No nearby hospital found');
+  if (isNight) {
+    score += 25;
+    reasons.push('Night-time travel detected');
   }
 
-  if (nearbyPolice === 0) {
-    score += 15;
-    reasons.push('No nearby police help found');
-  }
-} else {
-  reasons.push('Nearby safety places loading...');
-}
-
-    const speedKmh = location?.coords?.speed
-      ? Math.max(0, location.coords.speed * 3.6)
-      : 0;
-
-    if (speedKmh > 90) {
-      score += 20;
-      reasons.push('High-speed movement detected');
-    }
-
-    if (ghostMode) {
-      score += 25;
-      reasons.push('Ghost Mode activated by user');
-    }
-
-
-    if (savedContacts.length === 0) {
-      score += 10;
-      reasons.push('No emergency contacts saved');
-    }
-
-    const finalScore = Math.min(score, 100);
-
-    setRiskScore(finalScore);
-
-    if (finalScore >= 70) {
-      setRiskLevel('HIGH');
-    } else if (finalScore >= 35) {
-      setRiskLevel('MODERATE');
+  if (!placesLoading) {
+    if (!hasHospitalNearby) {
+      score += 15;
+      reasons.push('No nearby hospital found');
     } else {
-      setRiskLevel('LOW');
+      score -= 10;
+      reasons.push('Hospital nearby');
     }
 
-    setRiskReasons(reasons);
-  };
+    if (!hasPoliceNearby) {
+      score += 15;
+      reasons.push('No nearby police help found');
+    } else {
+      score -= 10;
+      reasons.push('Police help nearby');
+    }
+  } else {
+    reasons.push('Nearby safety places loading...');
+  }
+
+  const speedKmh = location?.coords?.speed
+    ? Math.max(0, location.coords.speed * 3.6)
+    : 0;
+
+  if (speedKmh > 90) {
+    score += 20;
+    reasons.push('High-speed movement detected');
+  }
+
+  if (ghostMode) {
+    score += 25;
+    reasons.push('Ghost Mode activated by user');
+  }
+
+  if (savedContacts.length === 0) {
+    score += 10;
+    reasons.push('No emergency contacts saved');
+  }
+
+  const finalScore = Math.max(0, Math.min(score, 100));
+
+  setRiskScore(finalScore);
+
+  if (finalScore >= 70) {
+    setRiskLevel('HIGH');
+  } else if (finalScore >= 35 && !hasSafetyNearby) {
+    setRiskLevel('MODERATE');
+  } else {
+    setRiskLevel('LOW');
+  }
+
+  setRiskReasons(reasons);
+};
 
   const updateThemeBySunset = (lat: number, lon: number) => {
     const times = SunCalc.getTimes(new Date(), lat, lon);
@@ -384,54 +400,114 @@ if (!placesLoading) {
     setIsNight(now < times.sunrise || now > times.sunset);
   };
 
-  const getLocationAndPlaces = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+  const locationWatcher = useRef<Location.LocationSubscription | null>(null);
 
-      if (status !== 'granted') {
-        setMessage('Location permission denied');
-        return;
-      }
+const getLocationAndPlaces = async () => {
+  try {
+    const { status } =
+      await Location.requestForegroundPermissionsAsync();
 
-      const loc = await Location.getCurrentPositionAsync({});
-      setLocation(loc);
-
-      updateThemeBySunset(loc.coords.latitude, loc.coords.longitude);
-      await fetchNearbyPlaces(loc.coords.latitude, loc.coords.longitude);
-    } catch (error) {
-      console.log(error);
-      setMessage('Failed loading app');
+    if (status !== 'granted') {
+      setMessage('Location permission denied');
+      return;
     }
-  };
 
+    let loc = await Location.getLastKnownPositionAsync();
+
+    if (!loc) {
+      loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+    }
+
+    // Initial setup
+    setLocation(loc);
+    setMessage('ROADSoS ready');
+
+    updateThemeBySunset(
+      loc.coords.latitude,
+      loc.coords.longitude
+    );
+
+    fetchNearbyPlaces(
+      loc.coords.latitude,
+      loc.coords.longitude
+    );
+
+    // Remove old watcher if exists
+    if (locationWatcher.current) {
+      locationWatcher.current.remove();
+    }
+
+    // Start LIVE tracking
+    locationWatcher.current =
+      await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 3000,
+          distanceInterval: 10,
+        },
+        (newLoc) => {
+          setLocation(newLoc);
+
+          updateThemeBySunset(
+            newLoc.coords.latitude,
+            newLoc.coords.longitude
+          );
+
+          // Refresh nearby places
+          fetchNearbyPlaces(
+            newLoc.coords.latitude,
+            newLoc.coords.longitude
+          );
+        }
+      );
+  } catch (error) {
+    console.log(error);
+
+    setMessage(
+      'Turn on device location/GPS and retry'
+    );
+
+    setPlacesLoading(false);
+  }
+};
 const fetchNearbyPlaces = async (lat: number, lon: number) => {
   try {
     setPlacesLoading(true);
 
-    console.log("FETCHING NEARBY:", lat, lon);
+    console.log("FETCHING NEARBY:", lat, lon, BASE_URL);
 
     const response = await axios.get(`${BASE_URL}/nearby`, {
-      params: { lat, lon },
+      params: {
+        lat,
+        lon,
+        radius: 2500,
+      },
       timeout: 15000,
     });
 
-    const nearbyPlaces = Array.isArray(response.data?.places)
-      ? response.data.places
-      : [];
+    console.log("NEARBY RESPONSE:", response.data);
 
-    console.log("NEARBY COUNT:", nearbyPlaces.length);
-    console.log("FIRST PLACE:", nearbyPlaces[0]);
+    const nearbyPlaces = Array.isArray(response.data?.places)
+      ? response.data.places.slice(0, 25)
+      : [];
 
     setPlaces(nearbyPlaces);
   } catch (error: any) {
-    console.log("NEARBY ERROR:", error?.message);
-    console.log("NEARBY ERROR DATA:", error?.response?.data);
+    console.log("NEARBY ERROR FULL:", {
+      message: error?.message,
+      code: error?.code,
+      status: error?.response?.status,
+      data: error?.response?.data,
+      url: `${BASE_URL}/nearby?lat=${lat}&lon=${lon}&radius=2500`,
+    });
+
     setPlaces([]);
   } finally {
     setPlacesLoading(false);
   }
-};
-  const getLocalBotReply = (text: string) => {
+}; const getLocalBotReply = (text: string) => {
     const lower = text.toLowerCase().trim();
     const hasAny = (words: string[]) => words.some((word) => lower.includes(word));
 

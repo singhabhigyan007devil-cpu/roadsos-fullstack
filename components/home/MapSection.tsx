@@ -105,7 +105,7 @@ function MapSection({
               )} km away`}
               pinColor={
                 place.type === "hospital"
-                  ? "#f41086"
+                  ? "#27f410"
                   : place.type === "police"
                   ? "#3B82F6"
                   : "#F59E0B"
