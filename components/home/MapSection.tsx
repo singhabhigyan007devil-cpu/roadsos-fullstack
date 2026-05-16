@@ -13,6 +13,9 @@ type MapSectionProps = {
   lifeIndex: number;
   darkMapStyle: any[];
   onStartJourney: () => void;
+  mapFocusMode: boolean;
+  onToggleFocus: () => void;
+  
 };
 
 const getDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -34,7 +37,9 @@ function MapSection({
   places,
   isNight,
   theme,
+  mapFocusMode,
   darkMapStyle,
+  onToggleFocus,
   onStartJourney,
 }: MapSectionProps) {
   if (!location) return null;
@@ -89,7 +94,9 @@ function MapSection({
         showsUserLocation={false}
         followsUserLocation
         showsMyLocationButton
-        customMapStyle={isNight ? darkMapStyle : []}
+        customMapStyle={darkMapStyle}
+        onPress={onToggleFocus}
+        
         initialRegion={{
           latitude: userLat,
           longitude: userLon,
@@ -97,6 +104,7 @@ function MapSection({
           longitudeDelta: 0.01,
         }}
       >
+       
         <Marker
           coordinate={{ latitude: userLat, longitude: userLon }}
           pinColor="#DC2626"
@@ -134,6 +142,34 @@ function MapSection({
           );
         })}
       </MapView>
+      <TouchableOpacity
+  activeOpacity={0.85}
+  onPress={onToggleFocus}
+  style={{
+    position: 'absolute',
+    top: 58,
+    right: 18,
+    backgroundColor: 'rgba(2,6,23,0.82)',
+    borderWidth: 1,
+    borderColor: 'rgba(125,211,252,0.35)',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    zIndex: 2000,
+    elevation: 20,
+  }}
+>
+  <Text
+    style={{
+      color: '#7DD3FC',
+      fontSize: 12,
+      fontWeight: '900',
+      letterSpacing: 1,
+    }}
+  >
+    {mapFocusMode ? 'SHOW HUD' : 'FOCUS MAP'}
+  </Text>
+</TouchableOpacity>
 
       <Animated.View
         entering={FadeIn.duration(500)}
@@ -146,12 +182,13 @@ function MapSection({
       >
         <BlurView
           intensity={92}
-          tint={isNight ? "dark" : "light"}
+          tint="dark"
           style={{
-            borderRadius: 26,
-            padding: 18,
+            borderRadius: 20,
+            padding: 12,
             overflow: "hidden",
             borderWidth: 1,
+            backgroundColor: "rgba(11, 11, 11, 0.72)",
             borderColor: isNight
               ? "rgba(255,255,255,0.10)"
               : "rgba(15,23,42,0.10)",
@@ -161,8 +198,8 @@ function MapSection({
             <View>
               <Text
                 style={{
-                  color: theme.text,
-                  fontSize: 26,
+                  color: "#F8FAFC",
+                  fontSize: 21,
                   fontWeight: "900",
                   letterSpacing: 0.8,
                 }}
@@ -172,7 +209,7 @@ function MapSection({
 
               <Text
                 style={{
-                  color: theme.sub,
+                  color: "#94A3B8",
                   marginTop: 4,
                   fontSize: 12,
                   fontWeight: "700",
@@ -228,21 +265,20 @@ function MapSection({
 
           <View
             style={{
-              marginTop: 16,
-              padding: 14,
-              borderRadius: 18,
+              marginTop: 10,
+              padding: 10,
+              borderRadius: 14,
               backgroundColor: isNight
                 ? "rgba(2,6,23,0.72)"
-                : "rgba(248,250,252,0.92)",
+                : 'rgba(15,23,42,0.72)',
               borderWidth: 1,
-              borderColor: isNight
-                ? "rgba(255,255,255,0.08)"
-                : "rgba(15,23,42,0.08)",
+              borderColor: "rgba(255,255,255,0.08)",
+                
             }}
           >
             <Text
               style={{
-                color: theme.sub,
+                color: "#94A3B8",
                 fontSize: 11,
                 fontWeight: "900",
                 letterSpacing: 1.1,
@@ -265,7 +301,7 @@ function MapSection({
 
             <Text
               style={{
-                color: theme.text,
+                color: "#F8FAFC",
                 marginTop: 8,
                 fontSize: 13,
                 fontWeight: "700",
@@ -285,10 +321,10 @@ function MapSection({
   activeOpacity={0.9}
   onPress={onStartJourney}
   style={{
-    marginTop: 12,
+    marginTop: 9,
     borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: 9,
+    paddingHorizontal: 11,
     backgroundColor: "rgba(2,6,23,0.86)",
     borderWidth: 1,
     borderColor: "rgba(34,197,94,0.22)",

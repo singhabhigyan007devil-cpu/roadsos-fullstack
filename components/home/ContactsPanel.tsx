@@ -104,11 +104,17 @@ function ContactsPanel({
 
       <TextInput
         placeholder="Enter phone number without country code"
-        placeholderTextColor={panelTheme.sub}
+        placeholderTextColor={"#94A3B8"}
+        
         value={emergencyContact}
         onChangeText={setEmergencyContact}
         keyboardType="phone-pad"
-        style={inputStyle}
+        style={[inputStyle,
+    {
+      color: "#ffaaa2",
+      backgroundColor: "rgba(15,23,42,0.86)",
+    },
+        ]}
       />
 
       <TouchableOpacity

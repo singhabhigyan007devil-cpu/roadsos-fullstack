@@ -32,21 +32,22 @@ function SOSPanel({
         position: "absolute",
         left: 16,
         right: 16,
-        bottom: 92,
+        bottom: 82,
       }}
     >
       <TouchableOpacity
         activeOpacity={0.9}
-        onPress={onStartJourney}
+        onPress={() => {}}
         style={{
-          backgroundColor: "rgba(2,6,23,0.94)",
-          padding: 14,
-          borderRadius: 22,
+          backgroundColor: "rgba(10, 6, 6, 0.84)",
+          padding: 10,
+          borderRadius: 18,
           borderWidth: 1,
           borderColor: protectedJourney
-            ? "rgba(34,197,94,0.45)"
-            : "rgba(255,255,255,0.10)",
+  ? "rgba(74,222,128,0.28)"
+  : "rgba(255,255,255,0.08)",
           marginBottom: 10,
+          
         }}
       >
         <Text
@@ -80,12 +81,15 @@ function SOSPanel({
   activeOpacity={0.88}
   onPress={onOpenVehicle}
   onLongPress={onStartJourney}
-  delayLongPress={2200}
+  delayLongPress={4000}
+  onPressOut={() => {}}
   style={{
-    flex: 1,
-    backgroundColor: "rgba(15,23,42,0.96)",
-    padding: 13,
-    borderRadius: 20,
+    backgroundColor: "rgba(19, 17, 17, 0.86)",
+    width: 200,
+paddingVertical: 7,
+paddingHorizontal: 15,
+borderRadius: 14,
+    
     marginRight: 6,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
@@ -100,27 +104,7 @@ function SOSPanel({
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          activeOpacity={0.88}
-          onPress={onOpenContacts}
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(15,23,42,0.96)",
-            padding: 13,
-            borderRadius: 20,
-            marginLeft: 6,
-            borderWidth: 1,
-            borderColor: "rgba(220,38,38,0.35)",
-          }}
-        >
-          <Text style={{ color: "#FCA5A5", fontSize: 12, fontWeight: "900" }}>
-            CONTACTS
-          </Text>
-
-          <Text style={{ color: "#CBD5E1", fontSize: 11, marginTop: 4 }}>
-            SOS Numbers
-          </Text>
-        </TouchableOpacity>
+       
       </View>
     </Animated.View>
   );

@@ -13,6 +13,10 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import {
+  Gesture,
+  GestureDetector
+} from 'react-native-gesture-handler';
 const SunCalc = require('suncalc');
 
 import ChatbotPanel from "@/components/home/ChatbotPanel";
@@ -58,11 +62,102 @@ type ChatMessage = {
   text: string;
 };
 
-const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#1d2c4d' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#ffffff' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#000000' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#304a7d' }] },
+const dayMapStyle = [
+  {
+    elementType: 'geometry',
+    stylers: [{ color: '#BFC8D2' }],
+  },
+
+  {
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#44505C' }],
+  },
+
+  {
+    elementType: 'labels.text.stroke',
+    stylers: [{ color: '#CCD4DC' }],
+  },
+
+  {
+    featureType: 'poi',
+    stylers: [{ visibility: 'off' }],
+  },
+
+  {
+    featureType: 'transit',
+    stylers: [{ visibility: 'off' }],
+  },
+
+  {
+    featureType: 'landscape',
+    elementType: 'geometry',
+    stylers: [
+      { color: '#C5CED8' },
+      { saturation: -50 },
+      { lightness: -8 },
+    ],
+  },
+
+  {
+    featureType: 'road',
+    elementType: 'geometry',
+    stylers: [
+      { color: '#97A6B5' },
+      { saturation: -65 },
+      { lightness: -10 },
+    ],
+  },
+
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry',
+    stylers: [
+      { color: '#7E90A4' },
+      { saturation: -55 },
+      { lightness: -12 },
+    ],
+  },
+
+  {
+    featureType: 'road.arterial',
+    elementType: 'geometry',
+    stylers: [
+      { color: '#A6B4C1' },
+      { saturation: -55 },
+      { lightness: -8 },
+    ],
+  },
+
+  {
+    featureType: 'road.local',
+    elementType: 'geometry',
+    stylers: [
+      { color: '#B8C3CD' },
+      { saturation: -60 },
+      { lightness: -5 },
+    ],
+  },
+
+  {
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [
+      { color: '#8EA2B2' },
+      { saturation: -45 },
+      { lightness: -10 },
+    ],
+  },
+];
+const nightMapStyle = [
+  { elementType: 'geometry', stylers: [{ color: '#0A0F1C' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#6B7A90' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#0A0F1C' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#172033' }, { saturation: -100 }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#22314A' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#09121F' }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#0A0F1C' }] },
 ];
 
 const lifeMessages = [
@@ -115,6 +210,7 @@ export default function HomeScreen() {
     },
   ]);
   const [chatLoading, setChatLoading] = useState(false);
+  const [mapFocusMode, setMapFocusMode] = useState(false);
 
   const [emergencyContact, setEmergencyContact] = useState('');
   const [savedContacts, setSavedContacts] = useState<string[]>([]);
@@ -175,7 +271,7 @@ export default function HomeScreen() {
     input: '#111827',
     chip: '#1E293B',
     border: 'rgba(255,255,255,0.14)',
-    background: 'rgba(2,6,23,0.96)',
+    background: 'rgba(5, 12, 45, 0.84)',
   };
 const triggerSilentSOS = async () => {
   try {
@@ -398,7 +494,7 @@ const formatTripTime = (seconds: number) => {
   const updateThemeBySunset = (lat: number, lon: number) => {
     const times = SunCalc.getTimes(new Date(), lat, lon);
     const now = new Date();
-    setIsNight(now < times.sunrise || now > times.sunset);
+    setIsNight(false);
   };
 
   const locationWatcher = useRef<Location.LocationSubscription | null>(null);
@@ -1377,6 +1473,13 @@ if (panel === 'calculator') {
 
     return null;
   };
+  const twoFingerDoubleTapGesture = Gesture.Tap()
+  .numberOfTaps(2)
+  .minPointers(2)
+  .runOnJS(true)
+  .onEnd(() => {
+    setMapFocusMode((prev) => !prev);
+  });
   const SlideAction = ({
   label,
   knobText,
@@ -1486,460 +1589,548 @@ if (panel === 'calculator') {
   const latitude = location.coords.latitude;
   const longitude = location.coords.longitude;
 
-  return (
-    <View style={{ flex: 1 }}>
-     <MapSection
-  location={location}
-  places={places}
-  isNight={isNight}
-  theme={theme}
-  lifeMessages={lifeMessages}
-  lifeIndex={lifeIndex}
-  darkMapStyle={darkMapStyle}
-  onStartJourney={activateCovertMode}
-/>
+ return (
 
-
-     <RiskShield
-  riskScore={riskScore}
-  riskLevel={riskLevel}
-  theme={theme}
-  ghostMode={covertMode}
-  onOpenRisk={() => setPanel("risk")}
-/>
-<SOSPanel
-  vehicleNumber={vehicleNumber}
-  protectedJourney={protectedJourney}
-  journeyCheckTime={journeyCheckTime}
-  onStartJourney={activateCovertMode}
-  onOpenVehicle={() => setPanel("vehicle")}
-  onOpenContacts={() => setPanel("contacts")}
-/>
-
-
-
-<PanelModal
-  visible={Boolean(panel)}
-  onClose={() => setPanel(null)}
-  panelTheme={panelTheme}
->
-  {renderPanelContent()}
-</PanelModal>
-     {accidentDetected && (
-  <Animated.View
-    entering={FadeIn}
-    exiting={FadeOut}
-    style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 9999,
-      elevation: 9999,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(2,6,23,0.45)',
-    }}
-  >
-    <BlurView
-      intensity={85}
-      tint="dark"
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-      }}
+  <GestureDetector gesture={twoFingerDoubleTapGesture}>
+  <View style={{ flex: 1 }}>
+    <MapSection
+      location={location}
+      places={places}
+      isNight={isNight}
+      theme={theme}
+      lifeMessages={lifeMessages}
+      lifeIndex={lifeIndex}
+      darkMapStyle={isNight ? nightMapStyle : dayMapStyle}
+      onStartJourney={activateCovertMode}
+      mapFocusMode={mapFocusMode}
+      onToggleFocus={() => setMapFocusMode((prev) => !prev)}
     />
+    
 
-    <View
-      style={{
-        width: '88%',
-        borderRadius: 36,
-        padding: 28,
-        alignItems: 'center',
-        backgroundColor: 'rgba(15,23,42,0.72)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.18)',
-      }}
-    >
-      <Text
+    {!mapFocusMode && (
+      <Animated.View
+      pointerEvents="box-none"
+        entering={FadeIn.duration(200)}
+        exiting={FadeOut.duration(200)}
         style={{
-          color: 'white',
-          fontSize: 28,
-          fontWeight: '900',
-          textAlign: 'center',
-          lineHeight: 34,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1000,
         }}
       >
-        It looks like you’ve been in a crash.
-      </Text>
+         
 
-      <Text
-        style={{
-          color: '#CBD5E1',
-          marginTop: 10,
-          fontSize: 14,
-          textAlign: 'center',
-        }}
-      >
-        ROADSoS will trigger emergency SOS if you don’t respond.
-      </Text>
-
-      <Text
-        style={{
-          color: '#FCA5A5',
-          marginTop: 18,
-          fontSize: 18,
-          fontWeight: '900',
-        }}
-      >
-        Sending SOS in {countdown}s
-      </Text>
-
-      {/* SOS SLIDE BUTTON */}
-      <SlideAction
-  label="Emergency Call"
-  knobText="SOS"
-  knobColor="#EF4444"
-  trackColor="rgba(220,38,38,0.45)"
-  onComplete={handleSOS}
-/>
-  
-
-      {/* I AM SAFE SLIDE BUTTON */}
-      <SlideAction
-  label="I am safe"
-  knobText="✓"
-  knobColor="#22C55E"
-  trackColor="rgba(148,163,184,0.28)"
-  onComplete={cancelAccidentAlert}
-/>
-        
-
-      
-       
-
-     <TouchableOpacity
-  onPress={cancelAccidentAlert}
-  activeOpacity={0.8}
-  style={{
-    marginTop: 22,
-    width: 58,
-    height: 58,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  }}
->
-  <Text
-    style={{
-      color: 'white',
-      fontSize: 30,
-      fontWeight: '300',
-    }}
-  >
-    × 
-  </Text>
-</TouchableOpacity>
-
-
-    </View>
-  </Animated.View>
-)}
-{flashlightActive && (
-  <TouchableOpacity
-    activeOpacity={1}
-    onPress={() => setFlashlightActive(false)}
-    style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(2,6,23,0.96)',
-      zIndex: 2000,
-      justifyContent: 'center',
-      alignItems: 'center',
-    }}
-  >
-    <View
-      style={{
-        width: 120,
-        height: 120,
-        borderRadius: 999,
-        backgroundColor: '#FACC15',
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#FACC15',
-        shadowOpacity: 0.9,
-        shadowRadius: 30,
-        elevation: 20,
-      }}
-    >
-      <Text style={{ fontSize: 42 }}>
-        🔦
-      </Text>
-    </View>
-
-    <Text
-      style={{
-        color: 'white',
-        fontSize: 26,
-        fontWeight: '900',
-        marginTop: 28,
-      }}
-    >
-      Flashlight ON
-    </Text>
-
-    <Text
-      style={{
-        color: '#CBD5E1',
-        marginTop: 8,
-        fontSize: 15,
-      }}
-    >
-      Tap anywhere to turn off
-    </Text>
-  </TouchableOpacity>
-)}
-
-      {fakeCallActive && (
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#020617', zIndex: 2100, justifyContent: 'space-between', alignItems: 'center', paddingTop: 90, paddingBottom: 70 }}>
-          <View style={{ alignItems: 'center' }}>
-            <Text style={{ color: '#94A3B8', fontSize: 16 }}>Incoming call</Text>
-            <Text style={{ color: 'white', fontSize: 34, fontWeight: '900', marginTop: 10 }}>Mom</Text>
-            <Text style={{ color: '#CBD5E1', fontSize: 15, marginTop: 6 }}>Mobile</Text>
-          </View>
-
-          <View style={{ width: 118, height: 118, borderRadius: 59, backgroundColor: '#1E293B', alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ fontSize: 48 }}>👤</Text>
-          </View>
-
-          <View style={{ flexDirection: 'row', width: '75%', justifyContent: 'space-between' }}>
-            <TouchableOpacity onPress={() => setFakeCallActive(false)} style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: '#DC2626', alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ color: 'white', fontSize: 26 }}>✕</Text>
-              <Text style={{ color: 'white', fontSize: 10, fontWeight: '900' }}>Decline</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => {
-                setFakeCallActive(false);
-                Alert.alert('Fake Call Active', 'Pretend you are speaking and move to a safer place.');
-              }}
-              style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: '#16A34A', alignItems: 'center', justifyContent: 'center' }}
-            >
-              <Text style={{ color: 'white', fontSize: 25 }}>☎</Text>
-              <Text style={{ color: 'white', fontSize: 10, fontWeight: '900' }}>Answer</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      {voiceSOSActive && (
-        <View style={{ position: 'absolute', top: 190, left: 24, right: 24, backgroundColor: 'rgba(15,23,42,0.96)', borderRadius: 28, padding: 24, zIndex: 1900, alignItems: 'center' }}>
-          <Text style={{ fontSize: 38 }}>🎙️</Text>
-          <Text style={{ color: 'white', fontSize: 22, fontWeight: '900', marginTop: 8 }}>Listening for SOS...</Text>
-          <Text style={{ color: '#CBD5E1', marginTop: 8, textAlign: 'center' }}>Demo: detecting emergency keyword</Text>
-        
-        </View>
-      )}
-      
-
-      {heroAlert && (
-        <TouchableOpacity activeOpacity={0.9} onPress={() => setHeroAlert(false)} style={{ position: 'absolute', top: 335, left: 16, right: 16, backgroundColor: '#7C2D12', borderRadius: 24, padding: 16, zIndex: 1200 }}>
-          <Text style={{ color: 'white', fontSize: 16, fontWeight: '900' }}>Nearby Alert</Text>
-          <Text style={{ color: '#FED7AA', marginTop: 6 }}>Someone 0.8 km away may need help. Open Hero Mode/Bystander ARMY for details.</Text>
-        </TouchableOpacity>
-      )}
-
-      {movementAlert && (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => setPanel('risk')}
-          style={{
-            position: 'absolute',
-            top: 405,
-            left: 16,
-            right: 16,
-            backgroundColor: '#991B1B',
-            borderRadius: 24,
-            padding: 16,
-            zIndex: 1250,
-            borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.18)',
-          }}
-        >
-          <Text style={{ color: 'white', fontSize: 16, fontWeight: '900' }}>
-            Movement Anomaly Detected ⚠️
-          </Text>
-          <Text style={{ color: '#FEE2E2', marginTop: 6, lineHeight: 20 }}>
-            ROADSoS noticed unusual movement. Tap to view risk details or send SOS if unsafe.
-          </Text>
-        </TouchableOpacity>
-      )}
-
-      {tripAlertVisible && (
         <View
           style={{
             position: 'absolute',
-            top: 240,
-            left: 20,
-            right: 20,
-            backgroundColor: '#7F1D1D',
-            borderRadius: 26,
-            padding: 24,
-            zIndex: 3000,
-            alignItems: 'center',
-            borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.18)',
+            bottom: 110,
+            alignSelf: 'center',
+            backgroundColor: 'rgba(2,6,23,0.55)',
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            borderRadius: 999,
           }}
         >
-          <Text style={{ color: 'white', fontSize: 22, fontWeight: '900' }}>
-            Protected Journey Check 🛡️
-          </Text>
-
-          <Text
-            style={{
-              color: '#FEE2E2',
-              textAlign: 'center',
-              marginTop: 10,
-              lineHeight: 22,
-            }}
-          >
-            ROADSoS is verifying your protected journey status.
-          </Text>
-
-          <TouchableOpacity
-            onPress={() => {
-              setTripAlertVisible(false);
-              setProtectedJourney(true);
-            }}
-            style={{
-              backgroundColor: '#22C55E',
-              paddingVertical: 14,
-              paddingHorizontal: 24,
-              borderRadius: 18,
-              marginTop: 18,
-            }}
-          >
-            <Text style={{ color: 'white', fontWeight: '900' }}>I'M SAFE</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleSOS}
-            style={{
-              backgroundColor: '#DC2626',
-              paddingVertical: 14,
-              paddingHorizontal: 24,
-              borderRadius: 18,
-              marginTop: 12,
-            }}
-          >
-            <Text style={{ color: 'white', fontWeight: '900' }}>SEND SOS</Text>
-          </TouchableOpacity>
+          
         </View>
-      )}
-
-      <TouchableOpacity
-        onPress={() => {
-          setProtectedJourney((prev) => !prev);
-          setTripAlertVisible(false);
-        }}
-        activeOpacity={0.86}
-        style={{
-          position: 'absolute',
-          bottom: 86,
-          right: 16,
-          backgroundColor: protectedJourney ? '#DC2626' : '#2563EB',
-          paddingVertical: 12,
-          paddingHorizontal: 16,
-          borderRadius: 20,
-          zIndex: 1600,
-          elevation: 8,
-        }}
-      >
-      </TouchableOpacity>
-
-     
-
-
- 
-
-      <View style={{ position: 'absolute', bottom: 12, left: 0, right: 0 }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12 }}>
-          {[
-            { label: 'SOS', icon: '🚨', panelKey: null, color: '#DC2626', action: handleSOS },
-            { label: 'Help', icon: '🛠️', panelKey: 'assist', color: '#EA580C', action: () => setPanel('assist') },
-            { label: 'Contacts', icon: '☎️', panelKey: 'contacts', color: '#DC2626', action: () => setPanel('contacts') },
-            { label: 'DL', icon: '🪪', panelKey: 'license', color: '#0F766E', action: () => setPanel('license') },
-            { label: 'Vault', icon: '❤️', panelKey: 'vault', color: '#BE123C', action: () => setPanel('vault') },
-            { label: 'AI', icon: '🤖', panelKey: 'chatbot', color: '#7C3AED', action: () => setPanel('chatbot') },
-            { label: 'Army', icon: '🛡️', panelKey: 'hero', color: '#CA8A04', action: () => setPanel('hero') },
-            { label: 'Police', icon: '🚓', panelKey: 'police', color: '#2563EB', action: () => setPanel('police') },
-            { label: 'Fleet', icon: '🚛', panelKey: 'fleet', color: '#0EA5E9', action: () => setPanel('fleet') },
-            { label: 'Insure', icon: '🛡️', panelKey: 'insurance', color: '#0891B2', action: () => setPanel('insurance') },
-            { label: 'Risk', icon: '⚠️', panelKey: 'risk', color: '#B45309', action: () => setPanel('risk') },
-            { label: 'Safety', icon: '⚙️', panelKey: 'safety', color: '#475569', action: () => setPanel('safety') },
-          ].map((item) => {
-            const active = item.panelKey !== null && panel === item.panelKey;
-
-            return (
-              <TouchableOpacity
-                key={item.label}
-                onPress={item.action}
-                activeOpacity={0.86}
-                style={{
-                  backgroundColor: active || item.label === 'SOS' ? item.color : 'rgba(15,23,42,0.96)',
-                  width: 50,
-                  height: 58,
-                  borderRadius: 21,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginRight: 10,
-                  borderWidth: 1,
-                  borderColor: 'rgba(255,255,255,0.16)',
-                  elevation: item.label === 'SOS' ? 9 : 5,
-                }}
-              >
-                <Text style={{ color: 'white', fontSize: 16 }}>{item.icon}</Text>
-                <Text style={{ color: 'white', fontSize: 7, marginTop: 3, fontWeight: '900' }}>{item.label}</Text>
-              </TouchableOpacity>
-              
-            );
-          })}
-        </ScrollView>
-      </View>
-      {/* FLOATING PREMIUM CALCULATOR */}
-<Animated.View
-  entering={FadeIn.delay(700)}
-  style={{
-    position: 'absolute',
-    right: 20,
-    bottom: 140,
-    zIndex: 9999,
-    elevation: 30,
-  }}
->
- 
-
-  <View
+      
+        <TouchableOpacity
+    onPress={() => setMapFocusMode(false)}
+    activeOpacity={0.85}
     style={{
-      marginTop: 8,
-      alignSelf: 'center',
-      backgroundColor: 'rgba(2,6,23,0.94)',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      position: 'absolute',
+      top: 58,
+      right: 18,
+      backgroundColor: 'rgba(2,6,23,0.78)',
+      borderWidth: 1,
+      borderColor: 'rgba(125,211,252,0.4)',
+      paddingVertical: 10,
+      paddingHorizontal: 14,
       borderRadius: 999,
+      zIndex: 5000,
+      elevation: 20,
     }}
   >
-   
-  </View>
-</Animated.View>
+    <Text
+      style={{
+        color: '#7DD3FC',
+        fontSize: 12,
+        fontWeight: '900',
+        letterSpacing: 1,
+      }}
+    >
+      SHOW HUD
+    </Text>
+  </TouchableOpacity>
+
+
+        <RiskShield
+          riskScore={riskScore}
+          riskLevel={riskLevel}
+          theme={theme}
+          ghostMode={covertMode}
+          onOpenRisk={() => setPanel('risk')}
+        />
+
+        <SOSPanel
+          vehicleNumber={vehicleNumber}
+          protectedJourney={protectedJourney}
+          journeyCheckTime={journeyCheckTime}
+          onStartJourney={activateCovertMode}
+          onOpenVehicle={() => setPanel('vehicle')}
+          onOpenContacts={() => setPanel('contacts')}
+        />
+
+        <PanelModal
+          visible={Boolean(panel)}
+          onClose={() => setPanel(null)}
+          panelTheme={panelTheme}
+        >
+          {renderPanelContent()}
+        </PanelModal>
+
+        {accidentDetected && (
+          <Animated.View
+            entering={FadeIn}
+            exiting={FadeOut}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 9999,
+              elevation: 9999,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(2,6,23,0.45)',
+            }}
+          >
+            <BlurView
+              intensity={85}
+              tint="dark"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+              }}
+            />
+
+            <View
+              style={{
+                width: '88%',
+                borderRadius: 36,
+                padding: 28,
+                alignItems: 'center',
+                backgroundColor: 'rgba(15,23,42,0.72)',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.18)',
+              }}
+            >
+              <Text
+                style={{
+                  color: 'white',
+                  fontSize: 28,
+                  fontWeight: '900',
+                  textAlign: 'center',
+                  lineHeight: 34,
+                }}
+              >
+                It looks like you’ve been in a crash.
+              </Text>
+
+              <Text
+                style={{
+                  color: '#CBD5E1',
+                  marginTop: 10,
+                  fontSize: 14,
+                  textAlign: 'center',
+                }}
+              >
+                ROADSoS will trigger emergency SOS if you don’t respond.
+              </Text>
+
+              <Text
+                style={{
+                  color: '#FCA5A5',
+                  marginTop: 18,
+                  fontSize: 18,
+                  fontWeight: '900',
+                }}
+              >
+                Sending SOS in {countdown}s
+              </Text>
+
+              <SlideAction
+                label="Emergency Call"
+                knobText="SOS"
+                knobColor="#EF4444"
+                trackColor="rgba(220,38,38,0.45)"
+                onComplete={handleSOS}
+              />
+
+              <SlideAction
+                label="I am safe"
+                knobText="✓"
+                knobColor="#22C55E"
+                trackColor="rgba(148,163,184,0.28)"
+                onComplete={cancelAccidentAlert}
+              />
+
+              <TouchableOpacity
+                onPress={cancelAccidentAlert}
+                activeOpacity={0.8}
+                style={{
+                  marginTop: 22,
+                  width: 58,
+                  height: 58,
+                  borderRadius: 999,
+                  backgroundColor: 'rgba(255,255,255,0.18)',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ color: 'white', fontSize: 30, fontWeight: '300' }}>
+                  ×
+                </Text>
+              </TouchableOpacity>
+            </View>
+           
+          </Animated.View>
+    
+        )}
+
+        {flashlightActive && (
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => setFlashlightActive(false)}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(2,6,23,0.96)',
+              zIndex: 2000,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <View
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: 999,
+                backgroundColor: '#FACC15',
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: '#FACC15',
+                shadowOpacity: 0.9,
+                shadowRadius: 30,
+                elevation: 20,
+              }}
+            >
+              <Text style={{ fontSize: 42 }}>🔦</Text>
+            </View>
+
+            <Text style={{ color: 'white', fontSize: 26, fontWeight: '900', marginTop: 28 }}>
+              Flashlight ON
+            </Text>
+
+            <Text style={{ color: '#CBD5E1', marginTop: 8, fontSize: 15 }}>
+              Tap anywhere to turn off
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {fakeCallActive && (
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: '#020617',
+              zIndex: 2100,
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingTop: 90,
+              paddingBottom: 70,
+            }}
+          >
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ color: '#94A3B8', fontSize: 16 }}>Incoming call</Text>
+              <Text style={{ color: 'white', fontSize: 34, fontWeight: '900', marginTop: 10 }}>
+                Mom
+              </Text>
+              <Text style={{ color: '#CBD5E1', fontSize: 15, marginTop: 6 }}>
+                Mobile
+              </Text>
+            </View>
+
+            <View
+              style={{
+                width: 118,
+                height: 118,
+                borderRadius: 59,
+                backgroundColor: '#1E293B',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 48 }}>👤</Text>
+            </View>
+
+            <View style={{ flexDirection: 'row', width: '75%', justifyContent: 'space-between' }}>
+              <TouchableOpacity
+                onPress={() => setFakeCallActive(false)}
+                style={{
+                  width: 76,
+                  height: 76,
+                  borderRadius: 38,
+                  backgroundColor: '#DC2626',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ color: 'white', fontSize: 26 }}>✕</Text>
+                <Text style={{ color: 'white', fontSize: 10, fontWeight: '900' }}>Decline</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setFakeCallActive(false);
+                  Alert.alert('Fake Call Active', 'Pretend you are speaking and move to a safer place.');
+                }}
+                style={{
+                  width: 76,
+                  height: 76,
+                  borderRadius: 38,
+                  backgroundColor: '#16A34A',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ color: 'white', fontSize: 25 }}>☎</Text>
+                <Text style={{ color: 'white', fontSize: 10, fontWeight: '900' }}>Answer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {voiceSOSActive && (
+          <View
+            style={{
+              position: 'absolute',
+              top: 190,
+              left: 24,
+              right: 24,
+              backgroundColor: 'rgba(15,23,42,0.96)',
+              borderRadius: 28,
+              padding: 24,
+              zIndex: 1900,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 38 }}>🎙️</Text>
+            <Text style={{ color: 'white', fontSize: 22, fontWeight: '900', marginTop: 8 }}>
+              Listening for SOS...
+            </Text>
+            <Text style={{ color: '#CBD5E1', marginTop: 8, textAlign: 'center' }}>
+              Demo: detecting emergency keyword
+            </Text>
+          </View>
+        )}
+
+        {heroAlert && (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => setHeroAlert(false)}
+            style={{
+              position: 'absolute',
+              top: 335,
+              left: 16,
+              right: 16,
+              backgroundColor: '#7C2D12',
+              borderRadius: 24,
+              padding: 16,
+              zIndex: 1200,
+            }}
+          >
+            <Text style={{ color: 'white', fontSize: 16, fontWeight: '900' }}>
+              Nearby Alert
+            </Text>
+            <Text style={{ color: '#FED7AA', marginTop: 6 }}>
+              Someone 0.8 km away may need help. Open Hero Mode/Bystander ARMY for details.
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {movementAlert && (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => setPanel('risk')}
+            style={{
+              position: 'absolute',
+              top: 405,
+              left: 16,
+              right: 16,
+              backgroundColor: '#991B1B',
+              borderRadius: 24,
+              padding: 16,
+              zIndex: 1250,
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.18)',
+            }}
+          >
+            <Text style={{ color: 'white', fontSize: 16, fontWeight: '900' }}>
+              Movement Anomaly Detected ⚠️
+            </Text>
+            <Text style={{ color: '#FEE2E2', marginTop: 6, lineHeight: 20 }}>
+              ROADSoS noticed unusual movement. Tap to view risk details or send SOS if unsafe.
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {tripAlertVisible && (
+          <View
+            style={{
+              position: 'absolute',
+              top: 240,
+              left: 20,
+              right: 20,
+              backgroundColor: '#7F1D1D',
+              borderRadius: 26,
+              padding: 24,
+              zIndex: 3000,
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: 'rgba(255,255,255,0.18)',
+            }}
+          >
+            <Text style={{ color: 'white', fontSize: 22, fontWeight: '900' }}>
+              Protected Journey Check 🛡️
+            </Text>
+
+            <Text style={{ color: '#FEE2E2', textAlign: 'center', marginTop: 10, lineHeight: 22 }}>
+              ROADSoS is verifying your protected journey status.
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => {
+                setTripAlertVisible(false);
+                setProtectedJourney(true);
+              }}
+              style={{
+                backgroundColor: '#22C55E',
+                paddingVertical: 14,
+                paddingHorizontal: 24,
+                borderRadius: 18,
+                marginTop: 18,
+              }}
+            >
+              <Text style={{ color: 'white', fontWeight: '900' }}>I'M SAFE</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleSOS}
+              style={{
+                backgroundColor: '#DC2626',
+                paddingVertical: 14,
+                paddingHorizontal: 24,
+                borderRadius: 18,
+                marginTop: 12,
+              }}
+            >
+              <Text style={{ color: 'white', fontWeight: '900' }}>SEND SOS</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <TouchableOpacity
+          onPress={() => {
+            setProtectedJourney((prev) => !prev);
+            setTripAlertVisible(false);
+          }}
+          activeOpacity={0.86}
+          style={{
+            position: 'absolute',
+            bottom: 86,
+            right: 16,
+            backgroundColor: protectedJourney ? '#DC2626' : '#2563EB',
+            paddingVertical: 12,
+            paddingHorizontal: 16,
+            borderRadius: 20,
+            zIndex: 1600,
+            elevation: 8,
+          }}
+        >
+          <Text style={{ color: 'white', fontWeight: '900' }}>
+            {protectedJourney ? 'STOP' : 'PROTECT'}
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
+    )}
+
+    <View style={{ position: 'absolute', bottom: 12, left: 0, right: 0, zIndex: 3000 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 12 }}
+      >
+        {[
+          { label: 'SOS', icon: '🚨', panelKey: null, color: '#DC2626', action: handleSOS },
+          { label: 'Help', icon: '🛠️', panelKey: 'assist', color: '#EA580C', action: () => setPanel('assist') },
+          { label: 'Contacts', icon: '☎️', panelKey: 'contacts', color: '#DC2626', action: () => setPanel('contacts') },
+          { label: 'DL', icon: '🪪', panelKey: 'license', color: '#0F766E', action: () => setPanel('license') },
+          { label: 'Vault', icon: '❤️', panelKey: 'vault', color: '#BE123C', action: () => setPanel('vault') },
+          { label: 'AI', icon: '🤖', panelKey: 'chatbot', color: '#7C3AED', action: () => setPanel('chatbot') },
+          { label: 'Army', icon: '🛡️', panelKey: 'hero', color: '#CA8A04', action: () => setPanel('hero') },
+          { label: 'Police', icon: '🚓', panelKey: 'police', color: '#2563EB', action: () => setPanel('police') },
+          { label: 'Fleet', icon: '🚛', panelKey: 'fleet', color: '#0EA5E9', action: () => setPanel('fleet') },
+          { label: 'Insure', icon: '🛡️', panelKey: 'insurance', color: '#0891B2', action: () => setPanel('insurance') },
+          { label: 'Risk', icon: '⚠️', panelKey: 'risk', color: '#B45309', action: () => setPanel('risk') },
+          { label: 'Safety', icon: '⚙️', panelKey: 'safety', color: '#475569', action: () => setPanel('safety') },
+        ].map((item) => {
+          const active = item.panelKey !== null && panel === item.panelKey;
+
+          return (
+            <TouchableOpacity
+              key={item.label}
+              onPress={item.action}
+              activeOpacity={0.86}
+              style={{
+                backgroundColor:
+                  active || item.label === 'SOS'
+                    ? item.color
+                    : 'rgba(15,23,42,0.96)',
+                width: 50,
+                height: 58,
+                borderRadius: 21,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginRight: 10,
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.16)',
+                elevation: item.label === 'SOS' ? 9 : 5,
+              }}
+            >
+              <Text style={{ color: 'white', fontSize: 16 }}>{item.icon}</Text>
+              <Text style={{ color: 'white', fontSize: 7, marginTop: 3, fontWeight: '900' }}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </View>
-  );
+  </View>
+  </GestureDetector>
+);
 }

@@ -31,13 +31,13 @@ export default function PanelModal({
       }}
     >
       <BlurView
-        intensity={20}
+        intensity={9000}
         tint="dark"
         style={{
           borderRadius: 30,
           padding: 18,
           overflow: "hidden",
-          backgroundColor: panelTheme.background,
+          backgroundColor: "rgb(28, 70, 153)",
           borderWidth: 1,
           borderColor: panelTheme.border,
         }}

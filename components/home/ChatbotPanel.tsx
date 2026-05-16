@@ -79,10 +79,16 @@ function ChatbotPanel({
 
       <TextInput
         placeholder="Type your emergency question..."
-        placeholderTextColor={panelTheme.sub}
+        placeholderTextColor={"#94A3B8"}
         value={input}
         onChangeText={setInput}
-        style={inputStyle}
+         style={[
+    inputStyle,
+    {
+      color: "#02070b",
+      backgroundColor: "rgba(255, 255, 255, 0.86)",
+    },
+  ]}
         multiline
       />
 

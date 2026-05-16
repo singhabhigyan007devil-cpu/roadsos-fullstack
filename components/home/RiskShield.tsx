@@ -46,19 +46,19 @@ function RiskShield({
         position: "absolute",
         left: 16,
         right: 16,
-        bottom: 168,
+        bottom: 240,
       }}
     >
       <BlurView
-        intensity={88}
+        intensity={92}
         tint="dark"
         style={{
-          borderRadius: 28,
+          borderRadius: 22,
           overflow: "hidden",
-          padding: 18,
-          backgroundColor: "rgba(2,6,23,0.72)",
-          borderWidth: 1,
-          borderColor: "rgba(255,255,255,0.10)",
+          padding: 13,
+         backgroundColor: "rgba(18, 1, 1, 0.81)",
+borderWidth: 1,
+borderColor: "rgba(255,255,255,0.08)",
         }}
       >
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
@@ -78,7 +78,7 @@ function RiskShield({
               style={{
                 color: "#F8FAFC",
                 marginTop: 6,
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: "900",
                 letterSpacing: 0.5,
               }}
@@ -125,14 +125,14 @@ function RiskShield({
 
           <View
             style={{
-              width: 74,
-              height: 74,
+              width: 58,
+              height: 58,
               borderRadius: 999,
-              borderWidth: 7,
+              borderWidth: 5,
               borderColor: riskColor,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "rgba(15,23,42,0.82)",
+              backgroundColor: "rgba(54, 62, 81, 0.82)",
             }}
           >
             <Text
