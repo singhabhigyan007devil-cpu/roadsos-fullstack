@@ -1,7 +1,6 @@
-import { BlurView } from "expo-blur";
 import React from "react";
-import { Linking, Text, TouchableOpacity, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import { Linking, View } from "react-native";
+import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import Animated, { FadeIn } from "react-native-reanimated";
 
 type MapSectionProps = {
@@ -9,6 +8,7 @@ type MapSectionProps = {
   places: any[];
   isNight: boolean;
   theme: any;
+  riskLevel: "LOW" | "MODERATE" | "HIGH";
   lifeMessages: string[];
   lifeIndex: number;
   darkMapStyle: any[];
@@ -40,6 +40,7 @@ function MapSection({
   mapFocusMode,
   darkMapStyle,
   onToggleFocus,
+  riskLevel,
   onStartJourney,
 }: MapSectionProps) {
   if (!location) return null;
@@ -95,7 +96,7 @@ function MapSection({
         followsUserLocation
         showsMyLocationButton
         customMapStyle={darkMapStyle}
-        onPress={onToggleFocus}
+        
         
         initialRegion={{
           latitude: userLat,
@@ -111,6 +112,35 @@ function MapSection({
           title="Current Position"
           description="Live ROADSoS location"
         />
+        {riskLevel === "LOW" && (
+  <Circle
+    center={{ latitude: userLat, longitude: userLon }}
+    radius={500}
+    strokeWidth={2}
+    strokeColor="rgba(34, 104, 255, 0.85)"
+    fillColor="rgba(37,99,235,0.30)"
+  />
+)}
+
+{riskLevel === "MODERATE" && (
+  <Circle
+    center={{ latitude: userLat, longitude: userLon }}
+    radius={600}
+    strokeWidth={2}
+    strokeColor="rgba(245,158,11,0.85)"
+    fillColor="rgba(245,158,11,0.32)"
+  />
+)}
+
+{riskLevel === "HIGH" && (
+  <Circle
+    center={{ latitude: userLat, longitude: userLon }}
+    radius={750}
+    strokeWidth={2}
+    strokeColor="rgba(220,38,38,0.9)"
+    fillColor="rgba(220,38,38,0.36)"
+  />
+)}
 
         {places.slice(0, 50).map((place: any, index: number) => {
           const lat = Number(place.latitude);
@@ -139,38 +169,10 @@ function MapSection({
                 );
               }}
             />
-          );
+                     );
         })}
       </MapView>
-      <TouchableOpacity
-  activeOpacity={0.85}
-  onPress={onToggleFocus}
-  style={{
-    position: 'absolute',
-    top: 58,
-    right: 18,
-    backgroundColor: 'rgba(2,6,23,0.82)',
-    borderWidth: 1,
-    borderColor: 'rgba(125,211,252,0.35)',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    zIndex: 2000,
-    elevation: 20,
-  }}
->
-  <Text
-    style={{
-      color: '#7DD3FC',
-      fontSize: 12,
-      fontWeight: '900',
-      letterSpacing: 1,
-    }}
-  >
-    {mapFocusMode ? 'SHOW HUD' : 'FOCUS MAP'}
-  </Text>
-</TouchableOpacity>
-
+     
       <Animated.View
         entering={FadeIn.duration(500)}
         style={{
@@ -180,196 +182,7 @@ function MapSection({
           right: 16,
         }}
       >
-        <BlurView
-          intensity={92}
-          tint="dark"
-          style={{
-            borderRadius: 20,
-            padding: 12,
-            overflow: "hidden",
-            borderWidth: 1,
-            backgroundColor: "rgba(11, 11, 11, 0.72)",
-            borderColor: isNight
-              ? "rgba(255,255,255,0.10)"
-              : "rgba(15,23,42,0.10)",
-          }}
-        >
-          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <View>
-              <Text
-                style={{
-                  color: "#F8FAFC",
-                  fontSize: 21,
-                  fontWeight: "900",
-                  letterSpacing: 0.8,
-                }}
-              >
-                ROADSoS
-              </Text>
-
-              <Text
-                style={{
-                  color: "#94A3B8",
-                  marginTop: 4,
-                  fontSize: 12,
-                  fontWeight: "700",
-                  letterSpacing: 0.4,
-                }}
-              >
-                Emergency Safety Intelligence
-              </Text>
-              <View
-  style={{
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-  }}
->
-  <View
-    style={{
-      width: 8,
-      height: 8,
-      borderRadius: 999,
-      backgroundColor: "#22C55E",
-      marginRight: 8,
-      shadowColor: "#22C55E",
-      shadowOpacity: 0.8,
-      shadowRadius: 6,
-      elevation: 6,
-    }}
-  />
-
-  <Text
-    style={{
-      color: "#94A3B8",
-      fontSize: 11,
-      fontWeight: "800",
-      letterSpacing: 1,
-    }}
-  >
-    LIVE GRID ACTIVE
-  </Text>
-</View>
-            </View>
-
-            <View
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 999,
-                backgroundColor: coverageColor,
-                marginTop: 8,
-              }}
-            />
-          </View>
-
-          <View
-            style={{
-              marginTop: 10,
-              padding: 10,
-              borderRadius: 14,
-              backgroundColor: isNight
-                ? "rgba(2,6,23,0.72)"
-                : 'rgba(15,23,42,0.72)',
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-                
-            }}
-          >
-            <Text
-              style={{
-                color: "#94A3B8",
-                fontSize: 11,
-                fontWeight: "900",
-                letterSpacing: 1.1,
-              }}
-            >
-              EMERGENCY COVERAGE
-            </Text>
-
-            <Text
-              style={{
-                color: coverageColor,
-                marginTop: 6,
-                fontSize: 22,
-                fontWeight: "900",
-                letterSpacing: 0.8,
-              }}
-            >
-              {coverageStatus}
-            </Text>
-
-            <Text
-              style={{
-                color: "#F8FAFC",
-                marginTop: 8,
-                fontSize: 13,
-                fontWeight: "700",
-              }}
-            >
-              Hospital{" "}
-              {nearestHospitalKm !== null
-                ? `${nearestHospitalKm.toFixed(1)} km`
-                : "unavailable"}{" "}
-              • Police{" "}
-              {nearestPoliceKm !== null
-                ? `${nearestPoliceKm.toFixed(1)} km`
-                : "unavailable"}
-            </Text>
-          </View>
-          <TouchableOpacity
-  activeOpacity={0.9}
-  onPress={onStartJourney}
-  style={{
-    marginTop: 9,
-    borderRadius: 16,
-    paddingVertical: 9,
-    paddingHorizontal: 11,
-    backgroundColor: "rgba(2,6,23,0.86)",
-    borderWidth: 1,
-    borderColor: "rgba(34,197,94,0.22)",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  }}
->
-  <View style={{ flex: 1 }}>
-    <Text
-      style={{
-        color: "#4ADE80",
-        fontSize: 10,
-        fontWeight: "900",
-        letterSpacing: 1,
-      }}
-    >
-      PROTECTED JOURNEY
-    </Text>
-
-    <Text
-      style={{
-        color: "#F8FAFC",
-        marginTop: 4,
-        fontSize: 13,
-        fontWeight: "800",
-      }}
-      numberOfLines={1}
-    >
-      Monitoring, check-ins and escalation
-    </Text>
-  </View>
-
-  <Text
-    style={{
-      color: "#94A3B8",
-      fontSize: 11,
-      fontWeight: "900",
-      marginLeft: 10,
-    }}
-  >
-    START
-  </Text>
-</TouchableOpacity>
-        </BlurView>
+       
       </Animated.View>
     </View>
   );

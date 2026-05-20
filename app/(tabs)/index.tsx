@@ -6,13 +6,15 @@ import { Accelerometer } from 'expo-sensors';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
-  Linking, PanResponder, Platform, Animated as RNAnimated, ScrollView,
+  Linking, PanResponder, Platform, Animated as RNAnimated,
   Share,
   Text,
   TextInput,
   TouchableOpacity,
+
   View
 } from 'react-native';
+
 import {
   Gesture,
   GestureDetector
@@ -25,7 +27,6 @@ import MapSection from "@/components/home/MapSection";
 import MedicalVault from "@/components/home/MedicalVault";
 import PanelModal from "@/components/home/PanelModal";
 import RiskFullPanel from "@/components/home/RiskFullPanel";
-import RiskShield from "@/components/home/RiskShield";
 import SOSPanel from "@/components/home/SOSPanel";
 import Animated, {
   FadeIn,
@@ -55,6 +56,7 @@ type Panel =
   | 'insurance'
   | 'risk'
   |'calculator'
+  |'tools'
   | null;
 
 type ChatMessage = {
@@ -210,6 +212,15 @@ export default function HomeScreen() {
     },
   ]);
   const [chatLoading, setChatLoading] = useState(false);
+  const [journeyControlsVisible, setJourneyControlsVisible] = useState(false);
+const stopProtectedJourney = () => {
+  setProtectedJourney(false);
+  setCovertMode(false);
+  setEscalationActive(false);
+  setTripAlertVisible(false);
+  setJourneyControlsVisible(false);
+
+};
   const [mapFocusMode, setMapFocusMode] = useState(false);
 
   const [emergencyContact, setEmergencyContact] = useState('');
@@ -218,6 +229,7 @@ export default function HomeScreen() {
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [placesLoading, setPlacesLoading] = useState(true);
   const [vehicleNumber, setVehicleNumber] = useState('');
+  const [escalationActive, setEscalationActive] = useState(false);
   const [vehicleType, setVehicleType] = useState('Car');
   const [fuelType, setFuelType] = useState('Petrol');
 
@@ -754,7 +766,25 @@ const fetchNearbyPlaces = async (lat: number, lon: number) => {
       console.error('Vehicle profile load failed',error);
     }
   };
+const shareLiveLocation = async () => {
+  if (!location) return;
 
+  await Share.share({
+    message: `ROADSoS Live Location:\nhttps://maps.google.com/?q=${location.coords.latitude},${location.coords.longitude}`,
+  });
+};
+
+const emergencyEscalation = async () => {
+  setEscalationActive(true);
+  setProtectedJourney(true);
+  setCovertMode(true);
+  setJourneyControlsVisible(false);
+
+  Alert.alert(
+    'Escalation Active',
+    'ROADSoS has increased monitoring, enabled live safety mode, and prepared emergency standby.'
+  );
+};
   const saveVehicleProfile = async () => {
     const profile = { vehicleNumber, vehicleType, fuelType };
     await AsyncStorage.setItem('vehicle_profile', JSON.stringify(profile));
@@ -865,6 +895,7 @@ const activateCovertMode = async () => {
   };
 
   const startFlashlight = () => setFlashlightActive((prev) => !prev);
+  
 
   const toggleHeroMode = () => {
     const next = !heroMode;
@@ -1470,7 +1501,95 @@ if (panel === 'calculator') {
     </View>
   );
 }
+if (panel === 'tools') {
+  const toolGroups = [
+    {
+      title: 'Emergency',
+      items: [
+        { label: 'Police Connect', action: () => setPanel('police') },
+        { label: 'Emergency Contacts', action: () => setPanel('contacts') },
+        { label: 'Risk Diagnostics', action: () => setPanel('risk') },
+      ],
+    },
+    {
+      title: 'Safety',
+      items: [
+        { label: 'Safety Hub', action: () => setPanel('safety') },
+        { label: 'Medical Vault', action: () => setPanel('vault') },
+        { label: 'Bystander ARMY', action: () => setPanel('hero') },
+      ],
+    },
+    {
+      title: 'Vehicle',
+      items: [
+        { label: 'Vehicle Profile', action: () => setPanel('vehicle') },
+        { label: 'Driving License', action: () => setPanel('license') },
+        { label: 'Insurance', action: () => setPanel('insurance') },
+      ],
+    },
+    {
+      title: 'Services',
+      items: [
+        { label: 'Roadside Assistance', action: () => setPanel('assist') },
+        { label: 'Fleet Safety', action: () => setPanel('fleet') },
+        { label: 'Calculator SafeTrigger', action: () => setPanel('calculator') },
+      ],
+    },
+  ];
 
+  return (
+    <View>
+      <Text style={{ color: 'white', fontSize: 24, fontWeight: '900' }}>
+        ROADSoS Tools
+      </Text>
+
+      <Text style={{ color: '#94A3B8', marginTop: 4 }}>
+        Advanced safety modules and emergency services.
+      </Text>
+
+      {toolGroups.map((group) => (
+        <View key={group.title} style={{ marginTop: 18 }}>
+          <Text
+            style={{
+              color: '#60A5FA',
+              fontSize: 12,
+              fontWeight: '900',
+              letterSpacing: 1,
+              marginBottom: 10,
+            }}
+          >
+            {group.title.toUpperCase()}
+          </Text>
+
+          {group.items.map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              onPress={item.action}
+              activeOpacity={0.86}
+              style={{
+                padding: 15,
+                borderRadius: 18,
+                backgroundColor: 'rgba(15,23,42,0.9)',
+                borderWidth: 1,
+                borderColor: 'rgba(255,255,255,0.08)',
+                marginBottom: 10,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: 'white', fontSize: 14, fontWeight: '800' }}>
+                {item.label}
+              </Text>
+
+              <Text style={{ color: '#64748B', fontSize: 18 }}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}
     return null;
   };
   const twoFingerDoubleTapGesture = Gesture.Tap()
@@ -1598,18 +1717,62 @@ if (panel === 'calculator') {
       places={places}
       isNight={isNight}
       theme={theme}
+      protectedJourney={protectedJourney}
+escalationActive={escalationActive}
       lifeMessages={lifeMessages}
       lifeIndex={lifeIndex}
       darkMapStyle={isNight ? nightMapStyle : dayMapStyle}
       onStartJourney={activateCovertMode}
       mapFocusMode={mapFocusMode}
+      riskLevel={riskLevel}
       onToggleFocus={() => setMapFocusMode((prev) => !prev)}
     />
-    
+    <View
+  style={{
+    position: 'absolute',
+    top: 58,
+    left: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(2,6,23,0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    zIndex: 9999,
+    elevation: 99,
+  }}
+>
+  <View
+    style={{
+      width: 8,
+      height: 8,
+      borderRadius: 999,
+      backgroundColor: escalationActive
+        ? '#F59E0B'
+        : protectedJourney
+        ? '#22C55E'
+        : '#60A5FA',
+      marginRight: 8,
+    }}
+  />
+
+  <Text
+    style={{
+      color: '#F8FAFC',
+      fontSize: 11,
+      fontWeight: '900',
+      letterSpacing: 1,
+    }}
+  >
+    ROADSoS
+  </Text>
+</View>
 
     {!mapFocusMode && (
       <Animated.View
-      pointerEvents="box-none"
+      pointerEvents="auto"
         entering={FadeIn.duration(200)}
         exiting={FadeOut.duration(200)}
         style={{
@@ -1654,36 +1817,165 @@ if (panel === 'calculator') {
       elevation: 20,
     }}
   >
-    <Text
-      style={{
-        color: '#7DD3FC',
-        fontSize: 12,
-        fontWeight: '900',
-        letterSpacing: 1,
-      }}
-    >
-      SHOW HUD
-    </Text>
+    
   </TouchableOpacity>
 
-
+{/*
         <RiskShield
           riskScore={riskScore}
           riskLevel={riskLevel}
           theme={theme}
           ghostMode={covertMode}
           onOpenRisk={() => setPanel('risk')}
-        />
+        />*/}
 
         <SOSPanel
-          vehicleNumber={vehicleNumber}
-          protectedJourney={protectedJourney}
-          journeyCheckTime={journeyCheckTime}
-          onStartJourney={activateCovertMode}
-          onOpenVehicle={() => setPanel('vehicle')}
-          onOpenContacts={() => setPanel('contacts')}
-        />
+  vehicleNumber={vehicleNumber}
+  protectedJourney={protectedJourney}
+  escalationActive={escalationActive}
+  journeyCheckTime={journeyCheckTime}
+  onStartJourney={() => {
+  if (protectedJourney) {
+    setJourneyControlsVisible(true);
+  } else {
+    activateCovertMode();
+  }
+}}
+  onOpenVehicle={() => setPanel('vehicle')}
+  onOpenContacts={() => setPanel('contacts')}
+  onSOS={handleSOS}
+  onCall112={() => Linking.openURL('tel:112')}
+  onOpenTools={() => setPanel('tools')}
+  onOpenAI={() => setPanel('chatbot')}
+/>
+{journeyControlsVisible && (
+  <View
+    style={{
+      position: 'absolute',
+      left: 24,
+      right: 24,
+      bottom: 170,
+      padding: 18,
+      borderRadius: 26,
+      backgroundColor: 'rgba(2,6,23,0.96)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.14)',
+      zIndex: 8000,
+      elevation: 80,
+    }}
+  >
+    <Text
+  style={{
+    color: '#F8FAFC',
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 0.4,
+  }}
+>
+  Protected Journey
+</Text>
 
+<Text
+  style={{
+    color: '#94A3B8',
+    marginTop: 5,
+    fontSize: 12,
+    fontWeight: '700',
+  }}
+>
+  Monitoring route, safety checks and escalation readiness.
+</Text>
+
+<View
+  style={{
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginTop: 16,
+    overflow: 'hidden',
+  }}
+>
+  <View
+    style={{
+      width: '78%',
+      height: '100%',
+      backgroundColor: '#22C55E',
+      borderRadius: 999,
+    }}
+  />
+</View>
+
+<TouchableOpacity
+ onPress={shareLiveLocation}
+  activeOpacity={0.86}
+  style={{
+    marginTop: 18,
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: 'rgba(37,99,235,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(96,165,250,0.22)',
+  }}
+>
+  <Text
+    style={{
+      color: '#DBEAFE',
+      fontSize: 14,
+      fontWeight: '900',
+    }}
+  >
+    Share Live Location
+  </Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+onPress={emergencyEscalation}
+  activeOpacity={0.86}
+  style={{
+    marginTop: 10,
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: 'rgba(245,158,11,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.18)',
+  }}
+>
+  <Text
+    style={{
+      color: '#FCD34D',
+      fontSize: 14,
+      fontWeight: '900',
+    }}
+  >
+    Emergency Escalation
+  </Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+  onPress={stopProtectedJourney}
+  activeOpacity={0.86}
+  style={{
+    marginTop: 10,
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: 'rgba(220,38,38,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(248,113,113,0.22)',
+  }}
+>
+  <Text
+    style={{
+      color: '#FCA5A5',
+      fontSize: 14,
+      fontWeight: '900',
+    }}
+  >
+    Stop Protected Journey
+  </Text>
+</TouchableOpacity>
+
+    </View>
+)}
         <PanelModal
           visible={Boolean(panel)}
           onClose={() => setPanel(null)}
@@ -2053,83 +2345,33 @@ if (panel === 'calculator') {
           </View>
         )}
 
-        <TouchableOpacity
-          onPress={() => {
-            setProtectedJourney((prev) => !prev);
-            setTripAlertVisible(false);
-          }}
-          activeOpacity={0.86}
-          style={{
-            position: 'absolute',
-            bottom: 86,
-            right: 16,
-            backgroundColor: protectedJourney ? '#DC2626' : '#2563EB',
-            paddingVertical: 12,
-            paddingHorizontal: 16,
-            borderRadius: 20,
-            zIndex: 1600,
-            elevation: 8,
-          }}
-        >
-          <Text style={{ color: 'white', fontWeight: '900' }}>
-            {protectedJourney ? 'STOP' : 'PROTECT'}
-          </Text>
-        </TouchableOpacity>
+      
       </Animated.View>
     )}
 
-    <View style={{ position: 'absolute', bottom: 12, left: 0, right: 0, zIndex: 3000 }}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 12 }}
-      >
-        {[
-          { label: 'SOS', icon: '🚨', panelKey: null, color: '#DC2626', action: handleSOS },
-          { label: 'Help', icon: '🛠️', panelKey: 'assist', color: '#EA580C', action: () => setPanel('assist') },
-          { label: 'Contacts', icon: '☎️', panelKey: 'contacts', color: '#DC2626', action: () => setPanel('contacts') },
-          { label: 'DL', icon: '🪪', panelKey: 'license', color: '#0F766E', action: () => setPanel('license') },
-          { label: 'Vault', icon: '❤️', panelKey: 'vault', color: '#BE123C', action: () => setPanel('vault') },
-          { label: 'AI', icon: '🤖', panelKey: 'chatbot', color: '#7C3AED', action: () => setPanel('chatbot') },
-          { label: 'Army', icon: '🛡️', panelKey: 'hero', color: '#CA8A04', action: () => setPanel('hero') },
-          { label: 'Police', icon: '🚓', panelKey: 'police', color: '#2563EB', action: () => setPanel('police') },
-          { label: 'Fleet', icon: '🚛', panelKey: 'fleet', color: '#0EA5E9', action: () => setPanel('fleet') },
-          { label: 'Insure', icon: '🛡️', panelKey: 'insurance', color: '#0891B2', action: () => setPanel('insurance') },
-          { label: 'Risk', icon: '⚠️', panelKey: 'risk', color: '#B45309', action: () => setPanel('risk') },
-          { label: 'Safety', icon: '⚙️', panelKey: 'safety', color: '#475569', action: () => setPanel('safety') },
-        ].map((item) => {
-          const active = item.panelKey !== null && panel === item.panelKey;
-
-          return (
-            <TouchableOpacity
-              key={item.label}
-              onPress={item.action}
-              activeOpacity={0.86}
-              style={{
-                backgroundColor:
-                  active || item.label === 'SOS'
-                    ? item.color
-                    : 'rgba(15,23,42,0.96)',
-                width: 50,
-                height: 58,
-                borderRadius: 21,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginRight: 10,
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.16)',
-                elevation: item.label === 'SOS' ? 9 : 5,
-              }}
-            >
-              <Text style={{ color: 'white', fontSize: 16 }}>{item.icon}</Text>
-              <Text style={{ color: 'white', fontSize: 7, marginTop: 3, fontWeight: '900' }}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-    </View>
+    {mapFocusMode && (
+  <TouchableOpacity
+    activeOpacity={0.85}
+    onPress={() => setMapFocusMode(false)}
+    style={{
+      position: 'absolute',
+      top: 58,
+      right: 18,
+      backgroundColor: 'rgba(2,6,23,0.82)',
+      borderWidth: 1,
+      borderColor: 'rgba(125,211,252,0.35)',
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 999,
+      zIndex: 99999,
+      elevation: 99999,
+    }}
+  >
+    <Text style={{ color: '#7DD3FC', fontSize: 12, fontWeight: '900' }}>
+      SHOW HUD
+    </Text>
+  </TouchableOpacity>
+)}
   </View>
   </GestureDetector>
 );

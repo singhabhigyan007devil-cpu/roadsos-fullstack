@@ -1,8 +1,8 @@
 import { BlurView } from "expo-blur";
 import React from "react";
-import { ScrollView, Text, TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import Animated, { SlideInDown, SlideOutDown } from "react-native-reanimated";
-
 type PanelModalProps = {
   visible: boolean;
   children: React.ReactNode;
@@ -31,36 +31,43 @@ export default function PanelModal({
       }}
     >
       <BlurView
-        intensity={9000}
-        tint="dark"
-        style={{
-          borderRadius: 30,
-          padding: 18,
-          overflow: "hidden",
-          backgroundColor: "rgb(28, 70, 153)",
-          borderWidth: 1,
-          borderColor: panelTheme.border,
-        }}
-      >
-        <TouchableOpacity onPress={onClose} style={{ alignSelf: "flex-end" }}>
-          <Text
-            style={{
-              color: panelTheme.text,
-              fontSize: 20,
-              fontWeight: "900",
-            }}
-          >
-            ✕
-          </Text>
-        </TouchableOpacity>
+  intensity={80}
+  tint="dark"
+  style={{
+    flex: 1,
+    borderRadius: 30,
+    overflow: "hidden",
+    backgroundColor: "rgba(2,6,23,0.92)",
+    borderWidth: 1,
+    borderColor: panelTheme.border,
+  }}
+>
+  <TouchableOpacity
+    onPress={onClose}
+    style={{
+      alignSelf: "flex-end",
+      padding: 18,
+      paddingBottom: 6,
+    }}
+  >
+    <Text style={{ color: panelTheme.text, fontSize: 20, fontWeight: "900" }}>
+      ✕
+    </Text>
+  </TouchableOpacity>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
-        >
-          {children}
-        </ScrollView>
-      </BlurView>
-    </Animated.View>
+  <ScrollView
+    style={{ flex: 1 }}
+    nestedScrollEnabled
+    keyboardShouldPersistTaps="handled"
+    showsVerticalScrollIndicator={false}
+    contentContainerStyle={{
+      paddingHorizontal: 18,
+      paddingBottom: 140,
+    }}
+  >
+    {children}
+  </ScrollView>
+</BlurView>
+</Animated.View>
   );
 }
