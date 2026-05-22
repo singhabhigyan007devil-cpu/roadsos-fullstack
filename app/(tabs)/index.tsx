@@ -1,3 +1,9 @@
+import {
+  createInitialSafetyContext,
+  SafetyContext,
+  SafetyEvent,
+  transitionSafetyState,
+} from "@/functions/safetyStateMachine";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { BlurView } from 'expo-blur';
@@ -14,11 +20,11 @@ import {
 
   View
 } from 'react-native';
-
 import {
   Gesture,
   GestureDetector
 } from 'react-native-gesture-handler';
+import getRoadRoute from "../../functions/directionsEngine";
 const SunCalc = require('suncalc');
 
 import ChatbotPanel from "@/components/home/ChatbotPanel";
@@ -217,6 +223,7 @@ const stopProtectedJourney = () => {
   setCovertMode(false);
   setEscalationActive(false);
   setTripAlertVisible(false);
+  sendSafetyEvent({ type: "END_JOURNEY" });
   setJourneyControlsVisible(false);
   setjourneyCheckTime(900);
   setTripAlertCountdown(30);
@@ -246,6 +253,7 @@ const stopProtectedJourney = () => {
   const [primaryContactName, setPrimaryContactName] = useState('');
   const [primaryContactPhone, setPrimaryContactPhone] = useState('');
   const [heroMode, setHeroMode] = useState(false);
+  
 
   const [fakeCallActive, setFakeCallActive] = useState(false);
   const [flashlightActive, setFlashlightActive] = useState(false);
@@ -268,6 +276,19 @@ const stopProtectedJourney = () => {
   const [protectedJourney, setProtectedJourney] = useState(false);
   const [journeyCheckTime, setjourneyCheckTime] = useState(300);
   const [tripAlertVisible, setTripAlertVisible] = useState(false);
+  const [safetyContext, setSafetyContext] = useState<SafetyContext>(
+  createInitialSafetyContext()
+);
+const [journeyDestination, setJourneyDestination] = useState<{
+  latitude: number;
+  longitude: number;
+} | null>(null);
+
+const sendSafetyEvent = (event: SafetyEvent) => {
+  setSafetyContext((current) =>
+    transitionSafetyState(current, event)
+  );
+};
   type SafetyState = 'idle' | 'protected' | 'escalation' | 'sos';
 
 const safetyState: SafetyState = accidentDetected
@@ -282,7 +303,12 @@ const [covertMode, setCovertMode] = useState(false);
   const lastForceRef = useRef(0);
 
   const BASE_URL = 'https://asia-south1-roadsos-core.cloudfunctions.net';
+const [routeCoordinates, setRouteCoordinates] = useState<
+  { latitude: number; longitude: number }[]
+>([]);
 
+const [routeSteps, setRouteSteps] = useState<any[]>([]);
+const [routeSummary, setRouteSummary] = useState<string | null>(null);
   const theme = isNight
     ? { text: '#F8FAFC', sub: '#CBD5E1', input: '#1E293B', chip: '#334155', glass: 'dark' as const }
     : { text: '#111827', sub: '#4B5563', input: '#F3F4F6', chip: '#E5E7EB', glass: 'light' as const };
@@ -381,6 +407,7 @@ const triggerSilentSOS = async () => {
   try {
     setCovertMode(true);
     setProtectedJourney(true);
+    sendSafetyEvent({ type: "ENTER_COVERT" });
     setPanel(null);
     setjourneyCheckTime(300);
 
@@ -876,7 +903,11 @@ const emergencyEscalation = async () => {
     'Escalation Active',
     'ROADSoS has increased monitoring, enabled live safety mode, and prepared emergency standby.'
   );
-};
+  sendSafetyEvent({
+  type: "RISK_DETECTED",
+  reason: "MANUAL_TRIGGER",
+});
+}
   const saveVehicleProfile = async () => {
     const profile = { vehicleNumber, vehicleType, fuelType };
     await AsyncStorage.setItem('vehicle_profile', JSON.stringify(profile));
@@ -1169,6 +1200,10 @@ Emergency Contacts:
     if (accidentDetected || accidentIntervalRef.current) return;
 
     setAccidentDetected(true);
+    sendSafetyEvent({
+  type: "SOS_TRIGGERED",
+  reason: "ACCIDENT_DETECTED",
+});
     setCountdown(10);
 
     let timer = 10;
@@ -1816,10 +1851,18 @@ const mapOverlayColor = accidentDetected
       places={places}
       isNight={isNight}
       theme={theme}
+      journeyDestination={journeyDestination}
       protectedJourney={protectedJourney}
 escalationActive={escalationActive}
       accidentDetected={accidentDetected}
       lifeMessages={lifeMessages}
+      routeCoordinates={routeCoordinates}
+onRouteDeviationDetected={() => {
+  sendSafetyEvent({
+    type: "RISK_DETECTED",
+    reason: "ROUTE_DEVIATION",
+  });
+}}
       lifeIndex={lifeIndex}
       darkMapStyle={isNight ? nightMapStyle : dayMapStyle}
       onStartJourney={activateCovertMode}
@@ -1953,12 +1996,39 @@ escalationActive={escalationActive}
   escalationActive={escalationActive}
   journeyCheckTime={journeyCheckTime}
   covertMode={covertMode}
-  onStartJourney={() => {
+  onStartJourney={async() => {
     if (protectedJourney) {
       setJourneyControlsVisible(true);
+      
     } else {
       setCovertMode(false);
       setProtectedJourney(true);
+       setJourneyDestination({
+    latitude: location.coords.latitude + 0.01,
+    longitude: location.coords.longitude + 0.01,
+  });
+  const destination = {
+  latitude: location.coords.latitude + 0.01,
+  longitude: location.coords.longitude + 0.01,
+};
+
+setJourneyDestination(destination);
+
+const route = await getRoadRoute(
+  {
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+  },
+  destination,
+  "YOUR_GOOGLE_MAPS_API_KEY"
+);
+
+if (route) {
+  setRouteCoordinates(route.coordinates);
+  setRouteSteps(route.steps);
+  setRouteSummary(`${route.distanceText} · ${route.durationText}`);
+}
+       sendSafetyEvent({ type: "START_JOURNEY" });
       setjourneyCheckTime(900);
       setTripAlertVisible(false);
       setTripAlertCountdown(30);
@@ -1967,6 +2037,7 @@ escalationActive={escalationActive}
   onActivateCovertMode={() => {
     setCovertMode(true);
     setProtectedJourney(true);
+    sendSafetyEvent({ type: "ENTER_COVERT" });
     setjourneyCheckTime(300);
     setTripAlertVisible(false);
     setTripAlertCountdown(30);

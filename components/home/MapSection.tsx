@@ -1,13 +1,18 @@
 import React from "react";
 import { Linking, View } from "react-native";
-import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
-
+import MapView, { Circle, Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 type MapSectionProps = {
   location: any;
   places: any[];
+  onRouteDeviationDetected?: () => void;
+  journeyDestination?: {
+  latitude: number;
+  longitude: number;
+} | null;
   isNight: boolean;
   theme: any;
   riskLevel: "LOW" | "MODERATE" | "HIGH";
+    
   lifeMessages: string[];
   protectedJourney: boolean;
 escalationActive: boolean;
@@ -41,8 +46,10 @@ function MapSection({
   theme,
   mapFocusMode,
   darkMapStyle,
+  onRouteDeviationDetected,
   accidentDetected,
   onToggleFocus,
+  journeyDestination,
   protectedJourney,
   escalationActive,
   riskLevel,
@@ -52,6 +59,7 @@ function MapSection({
 
   const userLat = Number(location.coords.latitude);
   const userLon = Number(location.coords.longitude);
+
 
   const hospitals = places.filter((p) => p.type === "hospital");
   const police = places.filter((p) => p.type === "police");
@@ -103,7 +111,7 @@ function MapSection({
         customMapStyle={darkMapStyle}
         
         
-       initialRegion={{
+       region={{
   latitude: userLat,
   longitude: userLon,
 
@@ -131,6 +139,25 @@ function MapSection({
           title="Current Position"
           description="Live ROADSoS location"
         />
+        {protectedJourney && journeyDestination && (
+  <>
+    <Polyline
+  coordinates={[
+    { latitude: userLat, longitude: userLon },
+    journeyDestination,
+  ]}
+  strokeWidth={2}
+  strokeColor="#8738c8"
+/>
+
+    <Marker
+      coordinate={journeyDestination}
+      pinColor="#22C55E"
+      title="Protected destination"
+      description="Temporary journey intent"
+    />
+  </>
+)}
        {protectedJourney && (
   <>
     <Circle
