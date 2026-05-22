@@ -33,7 +33,6 @@ import Animated, {
   FadeOut,
 } from 'react-native-reanimated';
 
-
 type Place = {
   id: number;
   lat: number;
@@ -201,7 +200,7 @@ export default function HomeScreen() {
   const [message, setMessage] = useState('Loading ROADSoS...');
   const [panel, setPanel] = useState<Panel>(null);
   const [isNight, setIsNight] = useState(false);
-  const [covertMode, setCovertMode] = useState(false);
+
   const [calculatorInput, setCalculatorInput] = useState('');
   const SECRET_CALC_PIN = '112=';
   const [chatInput, setChatInput] = useState('');
@@ -219,6 +218,8 @@ const stopProtectedJourney = () => {
   setEscalationActive(false);
   setTripAlertVisible(false);
   setJourneyControlsVisible(false);
+  setjourneyCheckTime(900);
+  setTripAlertCountdown(30);
 
 };
   const [mapFocusMode, setMapFocusMode] = useState(false);
@@ -262,11 +263,21 @@ const stopProtectedJourney = () => {
   const [riskReasons, setRiskReasons] = useState<string[]>([]);
   const [movementAlert, setMovementAlert] = useState(false);
   const [lastForce, setLastForce] = useState(0);
+  const [tripAlertCountdown, setTripAlertCountdown] = useState(30);
 
   const [protectedJourney, setProtectedJourney] = useState(false);
   const [journeyCheckTime, setjourneyCheckTime] = useState(300);
   const [tripAlertVisible, setTripAlertVisible] = useState(false);
+  type SafetyState = 'idle' | 'protected' | 'escalation' | 'sos';
 
+const safetyState: SafetyState = accidentDetected
+  ? 'sos'
+  : escalationActive
+  ? 'escalation'
+  : protectedJourney
+  ? 'protected'
+  : 'idle';
+const [covertMode, setCovertMode] = useState(false);
   const accidentIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastForceRef = useRef(0);
 
@@ -275,7 +286,88 @@ const stopProtectedJourney = () => {
   const theme = isNight
     ? { text: '#F8FAFC', sub: '#CBD5E1', input: '#1E293B', chip: '#334155', glass: 'dark' as const }
     : { text: '#111827', sub: '#4B5563', input: '#F3F4F6', chip: '#E5E7EB', glass: 'light' as const };
+function RoadsosStatusChipInline() {
+  return (
+  <View
+    pointerEvents="none"
+    style={{
+      position: 'absolute',
+      top: 58,
+      left: 18,
+      right: 18,
+      zIndex: 9000,
+      alignItems: 'center',
+    }}
+  >
+    <View
+      style={{
+        minWidth: 240,
+        maxWidth: 340,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 999,
+        backgroundColor: 'rgba(2,6,23,0.72)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.14)',
+        flexDirection: 'row',
+        alignItems: 'center',
+      }}
+    >
+      <View
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: 99,
+          backgroundColor: accidentDetected
+            ? '#EF4444'
+            : escalationActive
+            ? '#F59E0B'
+            : protectedJourney
+            ? '#22C55E'
+            : '#38BDF8',
+          marginRight: 10,
+        }}
+      />
 
+      <View>
+        <Text
+          style={{
+            color: '#F8FAFC',
+            fontSize: 13,
+            fontWeight: '900',
+            letterSpacing: 0.3,
+          }}
+        >
+          {accidentDetected
+            ? 'SOS Emergency Live'
+            : escalationActive
+            ? 'Elevated Risk Detected'
+            : protectedJourney
+            ? 'Protected Journey Active'
+            : 'ROADSoS Ready'}
+        </Text>
+
+        <Text
+          style={{
+            color: '#CBD5E1',
+            fontSize: 10,
+            marginTop: 2,
+            fontWeight: '700',
+          }}
+        >
+          {accidentDetected
+            ? 'Emergency response and live tracking active'
+            : escalationActive
+            ? 'Escalation layer monitoring route anomalies'
+            : protectedJourney
+            ? 'AI route monitoring and safety checks active'
+            : 'AI safety systems online'}
+        </Text>
+      </View>
+    </View>
+  </View>
+);
+}
   // Panel colors stay dark in both day and night mode so text is always readable.
   const panelTheme = {
     text: '#F8FAFC',
@@ -290,6 +382,7 @@ const triggerSilentSOS = async () => {
     setCovertMode(true);
     setProtectedJourney(true);
     setPanel(null);
+    setjourneyCheckTime(300);
 
     const phone = savedContacts[0];
 
@@ -394,42 +487,41 @@ useEffect(() => {
     }
   };
 }, []);
-const getTripInterval = () => {
-  if (riskLevel === 'HIGH') return 60;
-  if (riskLevel === 'MODERATE') return 300;
-  return 900;
-};
-  useEffect(() => {
+useEffect(() => {
   if (!protectedJourney || tripAlertVisible) return;
 
-  const intervalTime = getTripInterval();
-
-  setjourneyCheckTime(intervalTime);
-
-  let timer = intervalTime;
-
-  const interval = setInterval(() => {
-    timer -= 1;
-    setjourneyCheckTime(timer);
-
-    if (timer <= 0) {
-      clearInterval(interval);
-
-      if (riskLevel === 'HIGH') {
+  const timer = setInterval(() => {
+    setjourneyCheckTime((prev) => {
+      if (prev <= 1) {
         setTripAlertVisible(true);
-      } else if (riskLevel === 'MODERATE') {
-        Alert.alert(
-          'Safety Reminder',
-          'ROADSoS noticed moderate risk nearby. Stay alert.'
-        );
+        setTripAlertCountdown(30);
+        return covertMode ? 300 : 900;
       }
 
-      timer = intervalTime;
-    }
+      return prev - 1;
+    });
   }, 1000);
 
-  return () => clearInterval(interval);
-}, [protectedJourney, tripAlertVisible, riskLevel]);
+  return () => clearInterval(timer);
+}, [protectedJourney, tripAlertVisible, covertMode]);
+
+useEffect(() => {
+  if (!tripAlertVisible) return;
+
+  const timer = setInterval(() => {
+    setTripAlertCountdown((prev) => {
+      if (prev <= 1) {
+        setTripAlertVisible(false);
+        emergencyEscalation();
+        return 30;
+      }
+
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [tripAlertVisible]);
 const formatTripTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -1707,11 +1799,18 @@ if (panel === 'tools') {
 
   const latitude = location.coords.latitude;
   const longitude = location.coords.longitude;
-
+const mapOverlayColor = accidentDetected
+  ? 'rgba(220,38,38,0.18)'
+  : escalationActive
+  ? 'rgba(245,158,11,0.10)'
+  : protectedJourney
+  ? 'rgba(34,197,94,0.05)'
+  : 'transparent';
  return (
 
   <GestureDetector gesture={twoFingerDoubleTapGesture}>
   <View style={{ flex: 1 }}>
+  
     <MapSection
       location={location}
       places={places}
@@ -1719,6 +1818,7 @@ if (panel === 'tools') {
       theme={theme}
       protectedJourney={protectedJourney}
 escalationActive={escalationActive}
+      accidentDetected={accidentDetected}
       lifeMessages={lifeMessages}
       lifeIndex={lifeIndex}
       darkMapStyle={isNight ? nightMapStyle : dayMapStyle}
@@ -1727,6 +1827,20 @@ escalationActive={escalationActive}
       riskLevel={riskLevel}
       onToggleFocus={() => setMapFocusMode((prev) => !prev)}
     />
+  <Animated.View
+  pointerEvents="none"
+  entering={FadeIn.duration(450)}
+  exiting={FadeOut.duration(450)}
+  style={{
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: mapOverlayColor,
+    zIndex: 2,
+  }}
+/>
     <View
   style={{
     position: 'absolute',
@@ -1744,30 +1858,6 @@ escalationActive={escalationActive}
     elevation: 99,
   }}
 >
-  <View
-    style={{
-      width: 8,
-      height: 8,
-      borderRadius: 999,
-      backgroundColor: escalationActive
-        ? '#F59E0B'
-        : protectedJourney
-        ? '#22C55E'
-        : '#60A5FA',
-      marginRight: 8,
-    }}
-  />
-
-  <Text
-    style={{
-      color: '#F8FAFC',
-      fontSize: 11,
-      fontWeight: '900',
-      letterSpacing: 1,
-    }}
-  >
-    ROADSoS
-  </Text>
 </View>
 
     {!mapFocusMode && (
@@ -1801,7 +1891,7 @@ escalationActive={escalationActive}
         </View>
       
         <TouchableOpacity
-    onPress={() => setMapFocusMode(false)}
+    onPress={() => setMapFocusMode(true)}
     activeOpacity={0.85}
     style={{
       position: 'absolute',
@@ -1819,6 +1909,9 @@ escalationActive={escalationActive}
   >
     
   </TouchableOpacity>
+  <Text style={{ color: '#E0F2FE', fontWeight: '900' }}>
+  Focus
+</Text>
 
 {/*
         <RiskShield
@@ -1828,19 +1921,62 @@ escalationActive={escalationActive}
           ghostMode={covertMode}
           onOpenRisk={() => setPanel('risk')}
         />*/}
+{/*}        
+<RoadsosStatusChip
+  state={safetyState}
+  riskLevel={riskLevel}
+  isNight={isNight}
+/>
+
+<AIIntelligenceStrip
+  state={safetyState}
+  riskScore={riskScore}
+  riskLevel={riskLevel}
+  onPress={() => setPanel('risk')}
+/>
+
+<CommandCapsule
+  state={safetyState}
+  onStartJourney={activateCovertMode}
+  onOpenTools={() => setPanel('tools')}
+  onOpenAI={() => setPanel('chatbot')}
+  onEscalate={emergencyEscalation}
+  onSOS={handleSOS}
+/>
+*/}
+
+  <RoadsosStatusChipInline />
 
         <SOSPanel
   vehicleNumber={vehicleNumber}
   protectedJourney={protectedJourney}
   escalationActive={escalationActive}
   journeyCheckTime={journeyCheckTime}
+  covertMode={covertMode}
   onStartJourney={() => {
-  if (protectedJourney) {
-    setJourneyControlsVisible(true);
-  } else {
-    activateCovertMode();
-  }
-}}
+    if (protectedJourney) {
+      setJourneyControlsVisible(true);
+    } else {
+      setCovertMode(false);
+      setProtectedJourney(true);
+      setjourneyCheckTime(900);
+      setTripAlertVisible(false);
+      setTripAlertCountdown(30);
+    }
+  }}
+  onActivateCovertMode={() => {
+    setCovertMode(true);
+    setProtectedJourney(true);
+    setjourneyCheckTime(300);
+    setTripAlertVisible(false);
+    setTripAlertCountdown(30);
+  }}
+  onDeactivateCovertMode={() => {
+    setCovertMode(false);
+    setjourneyCheckTime(900);
+    setTripAlertVisible(false);
+    setTripAlertCountdown(30);
+  }}
   onOpenVehicle={() => setPanel('vehicle')}
   onOpenContacts={() => setPanel('contacts')}
   onSOS={handleSOS}
@@ -2309,6 +2445,9 @@ onPress={emergencyEscalation}
             <Text style={{ color: 'white', fontSize: 22, fontWeight: '900' }}>
               Protected Journey Check 🛡️
             </Text>
+            <Text style={{ color: '#FCA5A5', marginTop: 10, fontWeight: '900' }}>
+  Escalating in {tripAlertCountdown}s
+</Text>
 
             <Text style={{ color: '#FEE2E2', textAlign: 'center', marginTop: 10, lineHeight: 22 }}>
               ROADSoS is verifying your protected journey status.
@@ -2316,9 +2455,11 @@ onPress={emergencyEscalation}
 
             <TouchableOpacity
               onPress={() => {
-                setTripAlertVisible(false);
-                setProtectedJourney(true);
-              }}
+  setTripAlertVisible(false);
+  setTripAlertCountdown(30);
+  setjourneyCheckTime(covertMode ? 300 : 900);
+  setProtectedJourney(true);
+}}
               style={{
                 backgroundColor: '#22C55E',
                 paddingVertical: 14,
