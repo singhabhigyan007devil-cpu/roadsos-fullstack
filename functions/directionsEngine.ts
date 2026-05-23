@@ -73,7 +73,16 @@ const getRoadRoute = async (
   const response = await fetch(url);
   const data = await response.json();
 
-  if (!data.routes?.length) return null;
+  if (data.status !== "OK") {
+  console.log("GOOGLE DIRECTIONS STATUS:", data.status);
+  console.log("GOOGLE DIRECTIONS ERROR:", data.error_message);
+  return null;
+}
+
+if (!data.routes?.length) {
+  console.log("GOOGLE DIRECTIONS: no routes found");
+  return null;
+}
 
   const route = data.routes[0];
   const leg = route.legs[0];

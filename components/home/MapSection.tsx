@@ -1,31 +1,42 @@
-import React from "react";
-import { Linking, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Text, View } from "react-native";
 import MapView, { Circle, Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
+
+type Coordinate = {
+  latitude: number;
+  longitude: number;
+};
+
 type MapSectionProps = {
   location: any;
   places: any[];
+  onStartJourney: () => void;
+  onSelectDestination: (coordinate: Coordinate) => void;
+  onStartJourneyTo: (destination: Coordinate) => void;
   onRouteDeviationDetected?: () => void;
-  journeyDestination?: {
-  latitude: number;
-  longitude: number;
-} | null;
+  routeRiskScore?: number;
+  routeRiskLabel?: "SECURE" | "WATCH" | "ELEVATED";
+  journeyDestination?: Coordinate | null;
   isNight: boolean;
+  routeCoordinates?: Coordinate[];
   theme: any;
   riskLevel: "LOW" | "MODERATE" | "HIGH";
-    
   lifeMessages: string[];
   protectedJourney: boolean;
-escalationActive: boolean;
-accidentDetected: boolean;
+  escalationActive: boolean;
+  accidentDetected: boolean;
   lifeIndex: number;
   darkMapStyle: any[];
-  onStartJourney: () => void;
   mapFocusMode: boolean;
   onToggleFocus: () => void;
-  
 };
 
-const getDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+const getDistanceKm = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+) => {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -43,65 +54,140 @@ function MapSection({
   location,
   places,
   isNight,
-  theme,
-  mapFocusMode,
+  routeRiskLabel = "SECURE",
   darkMapStyle,
   onRouteDeviationDetected,
+  onStartJourneyTo,
   accidentDetected,
-  onToggleFocus,
   journeyDestination,
   protectedJourney,
+  routeCoordinates,
+  onSelectDestination,
   escalationActive,
   riskLevel,
-  onStartJourney,
 }: MapSectionProps) {
+  const mapRef = useRef<MapView | null>(null);
+
   if (!location) return null;
 
   const userLat = Number(location.coords.latitude);
   const userLon = Number(location.coords.longitude);
 
+  const getLookAheadPoint = () => {
+    if (!routeCoordinates || routeCoordinates.length < 2) {
+      return { latitude: userLat, longitude: userLon };
+    }
 
-  const hospitals = places.filter((p) => p.type === "hospital");
-  const police = places.filter((p) => p.type === "police");
+    const targetIndex = Math.min(8, routeCoordinates.length - 1);
+    const ahead = routeCoordinates[targetIndex];
 
-  const nearestHospitalKm =
-    hospitals.length > 0
-      ? Math.min(
-          ...hospitals.map((p) =>
-            getDistanceKm(userLat, userLon, Number(p.latitude), Number(p.longitude))
-          )
-        )
-      : null;
+    return {
+      latitude: userLat * 0.65 + ahead.latitude * 0.35,
+      longitude: userLon * 0.65 + ahead.longitude * 0.35,
+    };
+  };
 
-  const nearestPoliceKm =
-    police.length > 0
-      ? Math.min(
-          ...police.map((p) =>
-            getDistanceKm(userLat, userLon, Number(p.latitude), Number(p.longitude))
-          )
-        )
-      : null;
+  const getDistanceToRouteMeters = () => {
+    if (!routeCoordinates || routeCoordinates.length < 2) return 0;
 
-  const coverageStatus =
-    nearestHospitalKm !== null &&
-    nearestPoliceKm !== null &&
-    nearestHospitalKm <= 3 &&
-    nearestPoliceKm <= 3
-      ? "READY"
-      : nearestHospitalKm !== null || nearestPoliceKm !== null
-      ? "LIMITED"
-      : "EXPOSED";
+    const distances = routeCoordinates.map(
+      (point) =>
+        getDistanceKm(userLat, userLon, point.latitude, point.longitude) * 1000
+    );
 
-  const coverageColor =
-    coverageStatus === "READY"
-      ? "#16A34A"
-      : coverageStatus === "LIMITED"
-      ? "#D97706"
-      : "#DC2626";
+    return Math.min(...distances);
+  };
+
+  const getNearestRouteIndex = () => {
+    if (!routeCoordinates || routeCoordinates.length < 2) return 0;
+
+    let nearestIndex = 0;
+    let nearestDistance = Infinity;
+
+    routeCoordinates.forEach((point, index) => {
+      const distance = getDistanceKm(
+        userLat,
+        userLon,
+        point.latitude,
+        point.longitude
+      );
+
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+
+    return nearestIndex;
+  };
+
+  const nearestRouteIndex = getNearestRouteIndex();
+
+  const traversedCoordinates =
+    routeCoordinates?.slice(0, nearestRouteIndex + 1) || [];
+
+  const remainingCoordinates =
+    routeCoordinates?.slice(nearestRouteIndex) || [];
+
+  useEffect(() => {
+    if (!routeCoordinates || routeCoordinates.length <= 1 || !mapRef.current) {
+      return;
+    }
+
+    if (protectedJourney) {
+      mapRef.current.fitToCoordinates(routeCoordinates, {
+        edgePadding: {
+          top: 120,
+          right: 55,
+          bottom: 190,
+          left: 55,
+        },
+        animated: true,
+      });
+    }
+  }, [protectedJourney, routeCoordinates]);
+
+  useEffect(() => {
+    if (!protectedJourney || !mapRef.current) return;
+    if (!routeCoordinates || routeCoordinates.length < 2) return;
+
+    const cameraTarget = getLookAheadPoint();
+
+    mapRef.current.animateCamera(
+      {
+        center: cameraTarget,
+        zoom: 16.4,
+        pitch: 0,
+        heading: 0,
+      },
+      { duration: 900 }
+    );
+  }, [userLat, userLon, protectedJourney]);
+
+  useEffect(() => {
+    if (!protectedJourney || !routeCoordinates || routeCoordinates.length < 2) {
+      return;
+    }
+
+    const distanceFromRoute = getDistanceToRouteMeters();
+
+    if (distanceFromRoute > 120) {
+      onRouteDeviationDetected?.();
+    }
+  }, [userLat, userLon, protectedJourney, routeCoordinates]);
 
   return (
     <View style={{ flex: 1 }}>
       <MapView
+        ref={mapRef}
+        onPress={(event) => {
+          const coordinate = event.nativeEvent.coordinate;
+
+          onSelectDestination({
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude,
+          });
+        }}
         key={isNight ? "night-map" : "day-map"}
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
@@ -109,119 +195,226 @@ function MapSection({
         followsUserLocation
         showsMyLocationButton
         customMapStyle={darkMapStyle}
-        
-        
-       region={{
-  latitude: userLat,
-  longitude: userLon,
-
-  latitudeDelta: accidentDetected
-    ? 0.0038
-    : escalationActive
-    ? 0.006
-    : protectedJourney
-    ? 0.008
-    : 0.012,
-
-  longitudeDelta: accidentDetected
-    ? 0.0038
-    : escalationActive
-    ? 0.006
-    : protectedJourney
-    ? 0.008
-    : 0.012,
-}}
+        initialRegion={{
+          latitude: userLat,
+          longitude: userLon,
+          latitudeDelta: accidentDetected
+            ? 0.0038
+            : escalationActive
+            ? 0.006
+            : protectedJourney
+            ? 0.0065
+            : 0.012,
+          longitudeDelta: accidentDetected
+            ? 0.0038
+            : escalationActive
+            ? 0.006
+            : protectedJourney
+            ? 0.0065
+            : 0.012,
+        }}
       >
-       
         <Marker
           coordinate={{ latitude: userLat, longitude: userLon }}
-          pinColor="#DC2626"
-          title="Current Position"
-          description="Live ROADSoS location"
-        />
-        {protectedJourney && journeyDestination && (
-  <>
-    <Polyline
-  coordinates={[
-    { latitude: userLat, longitude: userLon },
-    journeyDestination,
-  ]}
-  strokeWidth={2}
-  strokeColor="#8738c8"
-/>
+          anchor={{ x: 0.5, y: 0.5 }}
+        >
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <View
+              style={{
+                position: "absolute",
+                width: 34,
+                height: 34,
+                borderRadius: 999,
+                backgroundColor: protectedJourney
+                  ? "rgba(96,165,250,0.10)"
+                  : "rgba(255,255,255,0.06)",
+                borderWidth: 1,
+                borderColor: protectedJourney
+                  ? "rgba(147,197,253,0.22)"
+                  : "rgba(255,255,255,0.10)",
+              }}
+            />
 
-    <Marker
-      coordinate={journeyDestination}
-      pinColor="#22C55E"
-      title="Protected destination"
-      description="Temporary journey intent"
-    />
-  </>
-)}
-       {protectedJourney && (
-  <>
-    <Circle
-      center={{ latitude: userLat, longitude: userLon }}
-      radius={260}
-      strokeWidth={1}
-      strokeColor={
-        escalationActive
-          ? "rgba(245,158,11,0.18)"
-          : "rgba(34,197,94,0.14)"
-      }
-      fillColor={
-        escalationActive
-          ? "rgba(245,158,11,0.08)"
-          : "rgba(34,197,94,0.06)"
-      }
-    />
+            <View
+              style={{
+                position: "absolute",
+                width: 2,
+                height: protectedJourney ? 18 : 10,
+                backgroundColor: protectedJourney
+                  ? "rgba(191,219,254,0.82)"
+                  : "rgba(255,255,255,0.32)",
+                borderRadius: 999,
+                top: 2,
+                opacity: protectedJourney ? 1 : 0.45,
+              }}
+            />
 
-    <Circle
-      center={{ latitude: userLat, longitude: userLon }}
-      radius={120}
-      strokeWidth={1}
-      strokeColor={
-        escalationActive
-          ? "rgba(245,158,11,0.55)"
-          : "rgba(34,197,94,0.45)"
-      }
-      fillColor={
-        escalationActive
-          ? "rgba(245,158,11,0.12)"
-          : "rgba(34,197,94,0.10)"
-      }
-    />
-  </>
-)}
+            <View
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: 999,
+                backgroundColor: protectedJourney ? "#E0F2FE" : "#F8FAFC",
+                borderWidth: 2,
+                borderColor: protectedJourney ? "#60A5FA" : "#CBD5E1",
+                shadowColor: "#93C5FD",
+                shadowOpacity: protectedJourney ? 0.35 : 0.12,
+                shadowRadius: 10,
+                elevation: 8,
+              }}
+            />
+          </View>
+        </Marker>
+
+        {journeyDestination && (
+          <Marker
+            coordinate={journeyDestination}
+            title={
+              protectedJourney ? "Protected destination" : "Selected destination"
+            }
+            description={
+              protectedJourney
+                ? "ROADSoS route lock active"
+                : "Start Protected Journey to lock route"
+            }
+            pinColor={protectedJourney ? "#93C5FD" : "#94A3B8"}
+          />
+        )}
+
+        {protectedJourney && routeCoordinates && routeCoordinates.length > 1 && (
+          <>
+            <Polyline
+              coordinates={routeCoordinates}
+              strokeWidth={11}
+              strokeColor="rgba(15,23,42,0.55)"
+              lineCap="round"
+              lineJoin="round"
+            />
+
+            <Polyline
+              coordinates={routeCoordinates}
+              strokeWidth={7}
+              strokeColor={
+                escalationActive
+                  ? "rgba(245,158,11,0.22)"
+                  : "rgba(96,165,250,0.14)"
+              }
+              lineCap="round"
+              lineJoin="round"
+            />
+
+            {traversedCoordinates.length > 1 && (
+              <Polyline
+                coordinates={traversedCoordinates}
+                strokeWidth={5}
+                strokeColor="rgba(148,163,184,0.38)"
+                lineCap="round"
+                lineJoin="round"
+              />
+            )}
+
+            {remainingCoordinates.length > 1 && (
+              <>
+                <Polyline
+                  coordinates={remainingCoordinates}
+                  strokeWidth={6}
+                  strokeColor={
+                    escalationActive
+                      ? "rgba(251,191,36,0.94)"
+                      : "rgba(214,228,255,0.96)"
+                  }
+                  lineCap="round"
+                  lineJoin="round"
+                />
+
+                <Polyline
+                  coordinates={remainingCoordinates}
+                  strokeWidth={2}
+                  strokeColor={
+                    escalationActive
+                      ? "rgba(254,243,199,0.80)"
+                      : "rgba(219,234,254,0.85)"
+                  }
+                  lineCap="round"
+                  lineJoin="round"
+                />
+              </>
+            )}
+          </>
+        )}
+
+        {protectedJourney && (
+          <>
+            <Circle
+              center={{ latitude: userLat, longitude: userLon }}
+              radius={260}
+              strokeWidth={1}
+              strokeColor={
+                escalationActive
+                  ? "rgba(245,158,11,0.18)"
+                  : "rgba(34,197,94,0.14)"
+              }
+              fillColor={
+                escalationActive
+                  ? "rgba(245,158,11,0.08)"
+                  : "rgba(34,197,94,0.06)"
+              }
+            />
+
+            <Circle
+              center={{ latitude: userLat, longitude: userLon }}
+              radius={120}
+              strokeWidth={1}
+              strokeColor={
+                escalationActive
+                  ? "rgba(245,158,11,0.55)"
+                  : "rgba(34,197,94,0.45)"
+              }
+              fillColor={
+                escalationActive
+                  ? "rgba(245,158,11,0.12)"
+                  : "rgba(34,197,94,0.10)"
+              }
+            />
+          </>
+        )}
+
         {riskLevel === "LOW" && (
-  <Circle
-    center={{ latitude: userLat, longitude: userLon }}
-    radius={500}
-    strokeWidth={2}
-    strokeColor="rgba(34, 104, 255, 0.85)"
-    fillColor="rgba(37,99,235,0.30)"
-  />
-)}
+          <Circle
+            center={{ latitude: userLat, longitude: userLon }}
+            radius={260}
+            strokeWidth={1}
+            strokeColor="rgba(59,130,246,0.20)"
+            fillColor="rgba(37,99,235,0.06)"
+          />
+        )}
 
-{riskLevel === "MODERATE" && (
-  <Circle
-    center={{ latitude: userLat, longitude: userLon }}
-    radius={600}
-    strokeWidth={2}
-    strokeColor="rgba(245,158,11,0.85)"
-    fillColor="rgba(245,158,11,0.32)"
-  />
-)}
+        {riskLevel === "MODERATE" && (
+          <Circle
+            center={{ latitude: userLat, longitude: userLon }}
+            radius={420}
+            strokeWidth={1}
+            strokeColor="rgba(245,158,11,0.28)"
+            fillColor="rgba(245,158,11,0.08)"
+          />
+        )}
 
-{riskLevel === "HIGH" && (
-  <Circle
-    center={{ latitude: userLat, longitude: userLon }}
-    radius={750}
-    strokeWidth={2}
-    strokeColor="rgba(220,38,38,0.9)"
-    fillColor="rgba(220,38,38,0.36)"
-  />
-)}
+        {riskLevel === "HIGH" && (
+          <Circle
+            center={{ latitude: userLat, longitude: userLon }}
+            radius={520}
+            strokeWidth={1}
+            strokeColor="rgba(220,38,38,0.32)"
+            fillColor="rgba(220,38,38,0.10)"
+          />
+        )}
 
         {places.slice(0, 50).map((place: any, index: number) => {
           const lat = Number(place.latitude);
@@ -236,226 +429,92 @@ function MapSection({
               key={`${place.id || index}-${lat}-${lon}`}
               coordinate={{ latitude: lat, longitude: lon }}
               title={place.name || "Emergency point"}
-              description={`${place.type || "Safety point"} • ${distanceKm.toFixed(1)} km`}
+              description={`${place.type || "Safety point"} • ${distanceKm.toFixed(
+                1
+              )} km`}
               pinColor={
                 place.type === "hospital"
-                  ? "#059669"
+                  ? "#34D399"
                   : place.type === "police"
-                  ? "#2563EB"
+                  ? "#60A5FA"
                   : "#D97706"
               }
-              onCalloutPress={() => {
-                Linking.openURL(
-                  `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLon}&destination=${lat},${lon}&travelmode=driving`
-                );
+              onPress={() => {
+                onStartJourneyTo({
+                  latitude: lat,
+                  longitude: lon,
+                });
               }}
             />
-                     );
+          );
         })}
       </MapView>
-     
-     {/*} <Animated.View
-        entering={FadeIn.duration(500)}
-        style={{
-          position: "absolute",
-          top: 42,
-          left: 16,
-          right: 16,
-        }}
-      >
-        <BlurView
-          intensity={92}
-          tint="dark"
+
+      {protectedJourney && (
+        <View
           style={{
-            borderRadius: 20,
-            padding: 12,
-            overflow: "hidden",
+            position: "absolute",
+            top: 58,
+            alignSelf: "center",
+            backgroundColor: "rgba(2,6,23,0.72)",
             borderWidth: 1,
-            backgroundColor: "rgba(11, 11, 11, 0.72)",
-            borderColor: isNight
-              ? "rgba(255,255,255,0.10)"
-              : "rgba(15,23,42,0.10)",
+            borderColor:
+              routeRiskLabel === "ELEVATED"
+                ? "rgba(245,158,11,0.28)"
+                : routeRiskLabel === "WATCH"
+                ? "rgba(96,165,250,0.22)"
+                : "rgba(34,197,94,0.22)",
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderRadius: 999,
+            flexDirection: "row",
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOpacity: 0.18,
+            shadowRadius: 18,
+            elevation: 8,
           }}
         >
-          
-          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <View>
-              <Text
-                style={{
-                  color: "#F8FAFC",
-                  fontSize: 21,
-                  fontWeight: "900",
-                  letterSpacing: 0.8,
-                }}
-              >
-                ROADSoS
-              </Text>
-
-              <Text
-                style={{
-                  color: "#94A3B8",
-                  marginTop: 4,
-                  fontSize: 12,
-                  fontWeight: "700",
-                  letterSpacing: 0.4,
-                }}
-              >
-                Emergency Safety Intelligence
-              </Text>
-              <View
-  style={{
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-  }}
->
-  <View
-    style={{
-      width: 8,
-      height: 8,
-      borderRadius: 999,
-      backgroundColor: "#22C55E",
-      marginRight: 8,
-      shadowColor: "#22C55E",
-      shadowOpacity: 0.8,
-      shadowRadius: 6,
-      elevation: 6,
-    }}
-  />
-
-  <Text
-    style={{
-      color: "#94A3B8",
-      fontSize: 11,
-      fontWeight: "800",
-      letterSpacing: 1,
-    }}
-  >
-    LIVE GRID ACTIVE
-  </Text>
-</View>
-            </View>
-
-            <View
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 999,
-                backgroundColor: coverageColor,
-                marginTop: 8,
-              }}
-            />
-          </View>
-
           <View
             style={{
-              marginTop: 10,
-              padding: 10,
-              borderRadius: 14,
-              backgroundColor: isNight
-                ? "rgba(2,6,23,0.72)"
-                : 'rgba(15,23,42,0.72)',
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
-                
+              width: 8,
+              height: 8,
+              borderRadius: 999,
+              marginRight: 10,
+              backgroundColor:
+                routeRiskLabel === "ELEVATED"
+                  ? "#F59E0B"
+                  : routeRiskLabel === "WATCH"
+                  ? "#60A5FA"
+                  : "#22C55E",
             }}
-          >
-            <Text
-              style={{
-                color: "#94A3B8",
-                fontSize: 11,
-                fontWeight: "900",
-                letterSpacing: 1.1,
-              }}
-            >
-              EMERGENCY COVERAGE
-            </Text>
+          />
 
-            <Text
-              style={{
-                color: coverageColor,
-                marginTop: 6,
-                fontSize: 22,
-                fontWeight: "900",
-                letterSpacing: 0.8,
-              }}
-            >
-              {coverageStatus}
-            </Text>
-
+          <View>
             <Text
               style={{
                 color: "#F8FAFC",
-                marginTop: 8,
-                fontSize: 13,
-                fontWeight: "700",
+                fontSize: 12,
+                fontWeight: "800",
+                letterSpacing: 0.8,
               }}
             >
-              Hospital{" "}
-              {nearestHospitalKm !== null
-                ? `${nearestHospitalKm.toFixed(1)} km`
-                : "unavailable"}{" "}
-              • Police{" "}
-              {nearestPoliceKm !== null
-                ? `${nearestPoliceKm.toFixed(1)} km`
-                : "unavailable"}
+              {routeRiskLabel} ROUTE
+            </Text>
+
+            <Text
+              style={{
+                color: "#94A3B8",
+                fontSize: 10,
+                marginTop: 2,
+                fontWeight: "600",
+              }}
+            >
+              ROADSoS corridor intelligence active
             </Text>
           </View>
-          <TouchableOpacity
-  activeOpacity={0.9}
-  onPress={onStartJourney}
-  style={{
-    marginTop: 9,
-    borderRadius: 16,
-    paddingVertical: 9,
-    paddingHorizontal: 11,
-    backgroundColor: "rgba(2,6,23,0.86)",
-    borderWidth: 1,
-    borderColor: "rgba(34,197,94,0.22)",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  }}
->
-  <View style={{ flex: 1 }}>
-    <Text
-      style={{
-        color: "#4ADE80",
-        fontSize: 10,
-        fontWeight: "900",
-        letterSpacing: 1,
-      }}
-    >
-      PROTECTED JOURNEY
-    </Text>
-
-    <Text
-      style={{
-        color: "#F8FAFC",
-        marginTop: 4,
-        fontSize: 13,
-        fontWeight: "800",
-      }}
-      numberOfLines={1}
-    >
-      Monitoring, check-ins and escalation
-    </Text>
-  </View>
-
-  <Text
-    style={{
-      color: "#94A3B8",
-      fontSize: 11,
-      fontWeight: "900",
-      marginLeft: 10,
-    }}
-  >
-    START
-  </Text>
-</TouchableOpacity>
-        </BlurView>
-      </Animated.View>
-      */}
+        </View>
+      )}
     </View>
   );
 }

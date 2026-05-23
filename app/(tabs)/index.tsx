@@ -199,7 +199,8 @@ const countryCodes = [
   { name: 'France', code: '+33', flag: '🇫🇷' },
   { name: 'Japan', code: '+81', flag: '🇯🇵' },
 ];
-
+const GOOGLE_MAPS_API_KEY =
+  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
@@ -223,11 +224,14 @@ const stopProtectedJourney = () => {
   setCovertMode(false);
   setEscalationActive(false);
   setTripAlertVisible(false);
-  sendSafetyEvent({ type: "END_JOURNEY" });
   setJourneyControlsVisible(false);
+  setRouteCoordinates([]);
+  setRouteSteps([]);
+  setRouteSummary(null);
+  setJourneyDestination(null);
+  sendSafetyEvent({ type: "END_JOURNEY" });
   setjourneyCheckTime(900);
   setTripAlertCountdown(30);
-
 };
   const [mapFocusMode, setMapFocusMode] = useState(false);
 
@@ -271,6 +275,10 @@ const stopProtectedJourney = () => {
   const [riskReasons, setRiskReasons] = useState<string[]>([]);
   const [movementAlert, setMovementAlert] = useState(false);
   const [lastForce, setLastForce] = useState(0);
+  const [routeRiskScore, setRouteRiskScore] = useState(0);
+const [routeRiskLabel, setRouteRiskLabel] = useState<
+  "SECURE" | "WATCH" | "ELEVATED"
+>("SECURE");
   const [tripAlertCountdown, setTripAlertCountdown] = useState(30);
 
   const [protectedJourney, setProtectedJourney] = useState(false);
@@ -625,7 +633,7 @@ const formatTripTime = (seconds: number) => {
   const updateThemeBySunset = (lat: number, lon: number) => {
     const times = SunCalc.getTimes(new Date(), lat, lon);
     const now = new Date();
-    setIsNight(now<times.sunrise||now>times.sunset);
+    setIsNight(now < times.sunrise || now > times.sunset);
   };
 
   const locationWatcher = useRef<Location.LocationSubscription | null>(null);
@@ -1814,7 +1822,90 @@ if (panel === 'tools') {
     </View>
   );
 };
+const GOOGLE_MAPS_API_KEY =
+  process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+  const calculateRouteRisk = (destination: {
+  latitude: number;
+  longitude: number;
+}) => {
+  let score = 0;
 
+  const nearbyHospitals = places.filter(
+    (place) => place.type === "hospital"
+  ).length;
+
+  const nearbyPolice = places.filter(
+    (place) => place.type === "police"
+  ).length;
+
+  if (isNight) score += 25;
+
+  if (nearbyHospitals === 0) score += 25;
+  if (nearbyPolice === 0) score += 25;
+
+  if (savedContacts.length === 0) score += 15;
+
+  const finalScore = Math.min(score, 100);
+
+  setRouteRiskScore(finalScore);
+
+  if (finalScore >= 60) {
+    setRouteRiskLabel("ELEVATED");
+    setRiskLevel("HIGH");
+  } else if (finalScore >= 30) {
+    setRouteRiskLabel("WATCH");
+    setRiskLevel("MODERATE");
+  } else {
+    setRouteRiskLabel("SECURE");
+    setRiskLevel("LOW");
+  }
+};
+const startProtectedJourneyTo = async (destination: {
+  latitude: number;
+  longitude: number;
+}) => {
+  if (!location) {
+    Alert.alert("Location unavailable", "Please enable GPS first.");
+    return;
+  }
+
+  setJourneyDestination(destination);
+  calculateRouteRisk(destination);
+  setCovertMode(false);
+  setEscalationActive(false);
+  setTripAlertVisible(false);
+  setJourneyControlsVisible(false);
+
+  try {
+    const route = await getRoadRoute(
+      {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      },
+      destination,
+      GOOGLE_MAPS_API_KEY
+    );
+
+    if (!route) {
+      throw new Error("No route returned");
+    }
+
+    setRouteCoordinates(route.coordinates || []);
+    setRouteSteps(route.steps || []);
+    setRouteSummary(`${route.distanceText} · ${route.durationText}`);
+
+    setProtectedJourney(true);
+    setjourneyCheckTime(900);
+
+    sendSafetyEvent({
+      type: "START_JOURNEY",
+    });
+
+    setMessage("Protected route locked");
+  } catch (error) {
+    console.error("ROAD ROUTE FETCH FAILED:", error);
+  }
+};
   if (Platform.OS === 'web') {
     return (
       <View style={{ flex: 1, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
@@ -1850,14 +1941,18 @@ const mapOverlayColor = accidentDetected
       location={location}
       places={places}
       isNight={isNight}
+      routeRiskScore={routeRiskScore}
+routeRiskLabel={routeRiskLabel}
       theme={theme}
       journeyDestination={journeyDestination}
       protectedJourney={protectedJourney}
 escalationActive={escalationActive}
       accidentDetected={accidentDetected}
+      
       lifeMessages={lifeMessages}
       routeCoordinates={routeCoordinates}
 onRouteDeviationDetected={() => {
+  
   sendSafetyEvent({
     type: "RISK_DETECTED",
     reason: "ROUTE_DEVIATION",
@@ -1865,7 +1960,22 @@ onRouteDeviationDetected={() => {
 }}
       lifeIndex={lifeIndex}
       darkMapStyle={isNight ? nightMapStyle : dayMapStyle}
-      onStartJourney={activateCovertMode}
+      onStartJourneyTo={startProtectedJourneyTo}
+      onStartJourney={() => {
+  if (!journeyDestination) {
+    Alert.alert(
+      "Destination needed",
+      "Tap a destination on the map first."
+    );
+    return;
+  }
+
+  startProtectedJourneyTo(journeyDestination);
+}}
+      onSelectDestination={(coordinate) => {
+  setJourneyDestination(coordinate);
+  setRouteCoordinates([]);
+}}
       mapFocusMode={mapFocusMode}
       riskLevel={riskLevel}
       onToggleFocus={() => setMapFocusMode((prev) => !prev)}
@@ -1996,43 +2106,21 @@ onRouteDeviationDetected={() => {
   escalationActive={escalationActive}
   journeyCheckTime={journeyCheckTime}
   covertMode={covertMode}
-  onStartJourney={async() => {
+  onStartJourney={() => {
     if (protectedJourney) {
       setJourneyControlsVisible(true);
-      
-    } else {
-      setCovertMode(false);
-      setProtectedJourney(true);
-       setJourneyDestination({
-    latitude: location.coords.latitude + 0.01,
-    longitude: location.coords.longitude + 0.01,
-  });
-  const destination = {
-  latitude: location.coords.latitude + 0.01,
-  longitude: location.coords.longitude + 0.01,
-};
-
-setJourneyDestination(destination);
-
-const route = await getRoadRoute(
-  {
-    latitude: location.coords.latitude,
-    longitude: location.coords.longitude,
-  },
-  destination,
-  "YOUR_GOOGLE_MAPS_API_KEY"
-);
-
-if (route) {
-  setRouteCoordinates(route.coordinates);
-  setRouteSteps(route.steps);
-  setRouteSummary(`${route.distanceText} · ${route.durationText}`);
-}
-       sendSafetyEvent({ type: "START_JOURNEY" });
-      setjourneyCheckTime(900);
-      setTripAlertVisible(false);
-      setTripAlertCountdown(30);
+      return;
     }
+
+    if (!journeyDestination) {
+      Alert.alert(
+        "Destination needed",
+        "Tap a hospital, police station, or map point first."
+      );
+      return;
+    }
+
+    startProtectedJourneyTo(journeyDestination);
   }}
   onActivateCovertMode={() => {
     setCovertMode(true);
@@ -2048,12 +2136,12 @@ if (route) {
     setTripAlertVisible(false);
     setTripAlertCountdown(30);
   }}
-  onOpenVehicle={() => setPanel('vehicle')}
-  onOpenContacts={() => setPanel('contacts')}
+  onOpenVehicle={() => setPanel("vehicle")}
+  onOpenContacts={() => setPanel("contacts")}
   onSOS={handleSOS}
-  onCall112={() => Linking.openURL('tel:112')}
-  onOpenTools={() => setPanel('tools')}
-  onOpenAI={() => setPanel('chatbot')}
+  onCall112={() => Linking.openURL("tel:112")}
+  onOpenTools={() => setPanel("tools")}
+  onOpenAI={() => setPanel("chatbot")}
 />
 {journeyControlsVisible && (
   <View
