@@ -1,267 +1,551 @@
-# ROADSoS 🚨
-### AI-Powered Road Safety & Emergency Response Platform
+# ROADSoS
 
-> Built for the **IIT Madras COERS Road Safety Hackathon 2026**
+## AI-Powered Intelligent Safety Operating System for Protected Mobility
 
-ROADSoS is a mobile-first emergency response app that helps accident victims, bystanders, and daily commuters get faster help during road emergencies. It combines AI risk analysis, real-time location, emergency SOS, and offline-capable safety tools into a single platform.
+ROADSoS is a mobile-first intelligent road safety and emergency response platform designed for protected journeys, silent safety, accident response, and AI-assisted situational awareness.
+
+Unlike traditional emergency apps, ROADSoS is built as a map-first personal safety operating system. It focuses on intelligent protection before, during, and after road emergencies through immersive live maps, protected routing, covert safety, and calm emergency UX.
+
+Built for the **IIT Madras COERS Road Safety Hackathon 2026**.
 
 ---
 
-## 📱 Screenshots
+## Vision
 
-> App running on Android — Day Mode & Night Mode
+ROADSoS reimagines road safety as an intelligent protection layer around movement.
 
-| Home Screen | Map View | AI Chatbot | SOS Panel |
+The goal is not to create another emergency button app.
+
+ROADSoS is designed to feel like:
+
+> an intelligent personal safety operating system for protected mobility.
+
+The platform focuses on:
+
+- protected journeys
+- real-time situational awareness
+- silent emergency escalation
+- intelligent route supervision
+- accident response
+- nearby hospital and police access
+- calm operational dark-mode UX
+- emotionally trustworthy safety interactions
+
+---
+
+## Screenshots
+
+> App running on Android — Operational Dark Mode
+
+| Operational Map | Protected Journey | SOS Panel | AI Safety Assistant |
 |---|---|---|---|
-| AI Risk Shield, SOS buttons, Ghost Mode | Live Google Maps with nearby hospitals & police | ROADSoS AI emergency assistant | One-tap SOS to all contacts |
+| Immersive live map with emergency intelligence | Real road-following protected route | Emergency actions and covert safety | Road safety and first-aid guidance |
+
+Add screenshots here:
+
+```md
+![ROADSoS Operational Map](./assets/screenshots/home.png)
+![ROADSoS Protected Journey](./assets/screenshots/protected-journey.png)
+![ROADSoS SOS Panel](./assets/screenshots/sos-panel.png)
+```
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-### 🆘 Emergency SOS
-- One-tap SOS SMS to all saved emergency contacts
-- WhatsApp emergency message with live location link
+### Protected Journey Intelligence
+
+- Start protected journeys inside ROADSoS
+- Real road-following route rendering
+- In-app protected route generation using Google Directions API
+- Hospital and police markers generate protected routes directly inside the app
+- No redirect to Google Maps for protected journeys
+- Protected destination locking
+- Protected corridor visualization
+- Route progression rendering
+- Movement-aware camera framing
+- Route look-ahead camera behavior
+- Route deviation detection for safety escalation
+- Corridor intelligence strip for route safety awareness
+
+---
+
+### Intelligent Route Supervision
+
+ROADSoS does not simply draw a route.
+
+It supervises movement through a protected corridor experience.
+
+The route system includes:
+
+- road-following polyline rendering
+- active protected corridor styling
+- completed vs remaining route visualization
+- intelligent camera fitting
+- forward-looking movement framing
+- route deviation detection
+- calm escalation-ready route state
+
+This makes the journey feel monitored, protected, and operational.
+
+---
+
+### Emergency SOS System
+
+- One-tap SOS actions
 - Call 112 directly from the app
-- Auto-accident detection via accelerometer — sends SOS after 10-second countdown
-
-### 🗺️ Live Map & Nearby Services
-- Google Maps with real-time user location
-- Nearby hospitals, police stations, trauma centres fetched automatically
-- Night/Day map mode based on sunset time (SunCalc)
-- Color-coded markers: 🟢 Hospitals | 🔵 Police | 🟡 Others
-
-### 🤖 AI Risk Shield
-- Predictive danger score (0–100) based on: time of day, speed, nearby services, movement anomaly, ghost mode
-- LOW / MODERATE / HIGH risk levels with reasons
-- Adaptive trip safety check-ins based on risk level
-
-### 🧠 ROADSoS AI Chatbot
-- Local offline emergency response bot
-- Covers: accident, bleeding, unconscious, fracture, burn, breakdown, unsafe situations
-- Backend AI fallback via FastAPI + Claude/GPT integration
-- Step-by-step first-aid guidance
-
-### 👻 Ghost Mode
-- Covert safety mode — app disguises as normal screen
-- Silently shares location with emergency contacts
-- Hidden calculator PIN trigger (Safe Calc) for secret SOS
-
-### 🚗 Roadside Assistance
-- Tow truck, mechanic, fuel help, EV charging — opens Google Maps search
-- Sends location-aware assistance request to backend
-
-### 🏥 Medical Vault
-- Blood type, allergies, medications, medical conditions
-- Stored locally (AsyncStorage) — never uploaded
-- Attached to every SOS message automatically
-
-### 🪪 Driving License
-- Link license locally for emergency identity
-- Verify via DigiLocker or Parivahan
-- Attached to SOS and police help messages
-
-### 🚓 Police Connect
-- Share police SOS with location
-- SMS all contacts with police alert
-- Call 112 directly
-
-### 🛡️ Bystander ARMY
-- Join as a community first responder
-- Receive nearby emergency alerts
-- Hero mode with live alert notifications
-
-### 🧮 Safe Calc (Covert SOS)
-- Disguised as a calculator
-- Secret PIN `112=` triggers silent SOS
-- Designed for unsafe situations where you can't openly call for help
-
-### ✈️ Trip Safety Mode
-- Start/End trip tracking
-- Periodic safety check-ins (frequency based on risk level)
-- HIGH risk → mandatory check-in every 60 seconds
-
-### 🚛 Fleet Safety & Insurance Partners
-- Fleet integration request form
-- Insurance partner links: ACKO, HDFC ERGO, ICICI Lombard, Digit
+- SMS emergency contacts with live location
+- WhatsApp emergency sharing
+- Real-time live location link
+- Emergency countdown logic
+- Accident detection using accelerometer data
+- SOS messages include location, vehicle, medical, and identity details
 
 ---
 
-## 🏗️ Tech Stack
+### Covert Protection Mode
+
+Covert Protection Mode is designed for unsafe situations where openly asking for help may not be safe.
+
+Features include:
+
+- silent safety mode
+- hidden calculator trigger
+- secret PIN-based SOS activation
+- covert escalation logic
+- silent protected journey behavior
+- reduced visible emergency interaction
+- discreet safety workflow
+
+---
+
+### Safe Calc
+
+Safe Calc is a hidden emergency trigger disguised as a calculator.
+
+- Opens like a normal calculator
+- Secret PIN `112=` activates silent SOS logic
+- Designed for unsafe or threatening situations
+- Supports covert emergency behavior without drawing attention
+
+---
+
+### Accident Detection
+
+ROADSoS uses device motion data to detect sudden impact patterns.
+
+- Accelerometer-based accident detection
+- Automatic emergency countdown
+- User can cancel if safe
+- If not cancelled, SOS flow is triggered
+- Designed as a foundation for crash response automation
+
+---
+
+### AI Safety Assistant
+
+ROADSoS includes an emergency guidance assistant for road safety situations.
+
+It can guide users through:
+
+- accidents
+- bleeding
+- unconsciousness
+- breathing problems
+- fractures
+- burns
+- road rage or unsafe situations
+- vehicle breakdowns
+- emergency number guidance
+
+The assistant provides calm, step-by-step safety instructions.
+
+---
+
+### AI Risk Shield
+
+ROADSoS calculates safety risk based on contextual signals such as:
+
+- night travel
+- nearby hospitals
+- nearby police support
+- movement anomalies
+- saved emergency contacts
+- protected journey state
+- covert mode state
+
+Risk levels:
+
+- LOW
+- MODERATE
+- HIGH
+
+The map atmosphere and safety behavior adapt based on risk.
+
+---
+
+### Live Emergency Infrastructure
+
+- Nearby hospitals
+- Nearby police stations
+- Nearby emergency support points
+- Color-coded emergency markers
+- Distance-aware emergency points
+- Tap hospital or police markers to generate in-app protected route
+
+---
+
+### Medical Vault
+
+Medical Vault stores essential emergency medical information locally.
+
+Supported data:
+
+- blood type
+- allergies
+- medications
+- medical conditions
+- primary contact name
+- primary contact phone
+
+This information can be attached to SOS messages during emergencies.
+
+---
+
+### Vehicle & Identity Safety
+
+ROADSoS supports local vehicle and identity details for emergency response.
+
+Includes:
+
+- vehicle number
+- vehicle type
+- fuel type
+- driving license holder name
+- driving license number
+- license validity
+- DigiLocker / Parivahan verification links
+
+These details can be included in emergency messages.
+
+---
+
+### Police Connect
+
+Police Connect provides quick access to police emergency actions.
+
+- Call 112
+- Share police SOS message
+- SMS emergency contacts with police alert
+- Include live location and vehicle details
+
+---
+
+### Roadside Assistance
+
+ROADSoS includes roadside assistance flows for:
+
+- towing
+- mechanic help
+- fuel support
+- EV charging support
+
+The app prepares location-aware assistance requests.
+
+---
+
+## Technology Stack
 
 ### Frontend
-| Tech | Usage |
+
+| Technology | Usage |
 |---|---|
-| React Native + Expo | Mobile app framework |
-| Expo Router | File-based navigation |
+| React Native | Mobile app framework |
+| Expo | App runtime and development platform |
 | TypeScript | Type safety |
-| react-native-maps | Google Maps integration |
-| expo-location | GPS and location permissions |
-| expo-blur | Glass-morphism UI effects |
-| react-native-reanimated | Smooth animations |
-| expo-sensors (Accelerometer) | Accident detection |
+| Expo Router | File-based navigation |
+| react-native-maps | Google Maps rendering |
+| React Native Reanimated | Smooth motion and transitions |
+| Expo Location | GPS and live location |
+| Expo Sensors | Accelerometer accident detection |
+| Expo Blur | Glass-style interface elements |
 | AsyncStorage | Local offline data storage |
-| axios | API calls |
-| SunCalc | Sunrise/sunset detection for night mode |
-
-### Backend
-| Tech | Usage |
-|---|---|
-| Python + FastAPI | REST API server |
-| Render | Cloud hosting |
-| OpenStreetMap / Overpass API | Nearby places (hospitals, police) |
-| AI Integration | Emergency chatbot responses |
-
-### APIs & Services
-| Service | Usage |
-|---|---|
-| Google Maps SDK for Android | Live map rendering |
-| Google Places API | Nearby services |
-| EAS Build (Expo) | Cloud APK builds |
-| SunCalc | Day/Night detection |
+| Axios | API communication |
 
 ---
 
-## 📁 Folder Structure
+### Backend & Services
 
-```
-roadsos/
+| Technology / Service | Usage |
+|---|---|
+| FastAPI | Backend API foundation |
+| Google Maps SDK | Live map rendering |
+| Google Directions API | Protected journey route generation |
+| OpenStreetMap / Overpass API | Nearby hospitals and police |
+| EAS Build | Android APK build pipeline |
+
+---
+
+## Architecture Philosophy
+
+ROADSoS follows a map-first operational safety architecture.
+
+The app is designed around:
+
+- immersive situational awareness
+- intelligent movement supervision
+- calm emergency UX
+- operational restraint
+- hidden complexity
+- trust psychology
+- silent safety
+- emotionally believable emergency systems
+
+ROADSoS intentionally avoids:
+
+- dashboard clutter
+- panic-heavy UI
+- excessive gamification
+- cyberpunk visual overload
+- unnecessary interface complexity
+- distracting emergency controls
+
+The product goal is simple:
+
+> Make users feel that the system is quietly protecting their journey.
+
+---
+
+## UX Philosophy
+
+ROADSoS is built around calm under pressure.
+
+Every interface element must justify stealing attention from the map.
+
+The design direction prioritizes:
+
+- map dominance
+- dark operational atmosphere
+- minimal emergency friction
+- subtle escalation feedback
+- intelligent route confidence
+- mature futuristic visuals
+- emotional trust
+
+ROADSoS should feel like intelligent civilian safety infrastructure, not a gaming HUD or a generic navigation clone.
+
+---
+
+## Project Structure
+
+```txt
+roadsos-fullstack/
 ├── app/
 │   ├── (tabs)/
-│   │   └── index.tsx          # Main screen — map, SOS, all panels
+│   │   └── index.tsx
 │   └── _layout.tsx
+├── components/
+│   └── home/
+│       ├── MapSection.tsx
+│       ├── SOSPanel.tsx
+│       ├── ChatbotPanel.tsx
+│       ├── ContactsPanel.tsx
+│       ├── MedicalVault.tsx
+│       ├── PanelModal.tsx
+│       └── RiskFullPanel.tsx
+├── functions/
+│   ├── directionsEngine.ts
+│   └── safetyStateMachine.ts
 ├── assets/
-│   └── images/                # App icons, splash screen
-├── backend/                   # FastAPI Python backend
-├── components/                # Reusable UI components
-├── constants/                 # Theme, colors
-├── hooks/                     # Custom React hooks
-├── scripts/                   # Utility scripts
-├── app.config.js              # Expo config with Google Maps API key
-├── eas.json                   # EAS Build configuration
+├── backend/
 ├── package.json
+├── app.config.js
+├── eas.json
 └── README.md
 ```
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
+
 - Node.js 18+
 - Expo CLI
-- Android Studio (for local builds) or EAS account (for cloud builds)
-- Google Cloud account with Maps SDK enabled
+- Android Studio or Expo Go
+- Google Cloud account
+- Google Maps SDK enabled
+- Google Directions API enabled
 
-### 1. Clone the repository
+---
+
+### 1. Clone Repository
+
 ```bash
 git clone https://github.com/singhabhigyan007devil-cpu/roadsos-fullstack.git
 cd roadsos-fullstack
 ```
 
-### 2. Install dependencies
+---
+
+### 2. Install Dependencies
+
 ```bash
 npm install
 ```
 
-### 3. Create `.env` file
-```bash
-GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
-```
-> Never commit `.env` to GitHub.
+---
 
-### 4. Start development server
+### 3. Create Environment File
+
+Create a `.env` file in the project root:
+
+```env
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_GOOGLE_MAPS_API_KEY
+```
+
+Never commit `.env` to GitHub.
+
+---
+
+### 4. Start Development Server
+
 ```bash
 npx expo start
 ```
 
+---
+
 ### 5. Run on Android
+
 ```bash
 npx expo run:android
 ```
 
 ---
 
-## 🏗️ Building the APK
+## APK Build
 
-### Cloud Build (EAS) — recommended
+### EAS Cloud Build
+
 ```bash
-# Set API key as EAS secret
-eas env:create --scope project --name GOOGLE_MAPS_API_KEY --environment production --visibility sensitive
-
-# Build APK
 eas build --platform android --profile production
 ```
 
-### Local Build
-```bash
-# Set environment variable
-$env:GOOGLE_MAPS_API_KEY = "your_key_here"
+---
 
-# Build
+### Local Android Build
+
+```bash
 npx expo run:android --variant release
 ```
 
 ---
 
-## 🔐 Security
+## Security & Privacy
 
-- API keys stored as EAS encrypted secrets — never in source code
-- `.env` files excluded from Git tracking via `.gitignore`
-- Google Maps API key restricted to Maps SDK, Directions API, Places API only
-- Medical Vault and license data stored locally on device only — never uploaded
-- Ghost Mode designed for covert emergency use
-
----
-
-## 🌍 Global Applicability
-
-- Country code selector for emergency contacts (10 countries supported)
-- Google Maps works globally
-- Emergency number guidance (112 for India, adaptable)
-- Offline-capable: local AI chatbot, medical vault, contacts all work without internet
+- API keys are stored outside source code
+- `.env` files are excluded from Git tracking
+- Medical Vault data is stored locally on device
+- Emergency contacts are stored locally
+- Driving license details are stored locally
+- Sensitive data is shared only during emergency actions
+- Covert Mode supports silent emergency activation
+- SOS messages require user-configured emergency contacts
 
 ---
 
-## 📊 Evaluation Criteria Coverage
+## Demo Flow
 
-| Criteria | Implementation |
+Recommended demo sequence:
+
+1. Open ROADSoS operational dark-mode map
+2. Show nearby hospitals and police markers
+3. Tap a hospital or police marker
+4. Start Protected Journey
+5. Show real road-following route inside ROADSoS
+6. Show protected corridor and route progression
+7. Trigger Covert Protection Mode
+8. Show hidden Safe Calc trigger
+9. Simulate accident detection or SOS flow
+10. Show emergency message with live location, vehicle, license, and medical details
+
+---
+
+## Evaluation Criteria Coverage
+
+| Criteria | ROADSoS Implementation |
 |---|---|
-| Nearest Police, Hospitals, Ambulance | ✅ Live map markers via Overpass API |
-| Towing, Puncture, Showrooms | ✅ Roadside Assistance panel with Google Maps search |
-| Global Applicability | ✅ Country codes, Google Maps, adaptable emergency numbers |
-| Offline Functionality | ✅ Local AI bot, AsyncStorage data, offline SOS via SMS |
-| Reliability & Data Accuracy | ✅ OpenStreetMap data, real-time GPS |
-| Number of Contacts Fetched | ✅ Multiple nearby services fetched automatically |
-| Innovation & Additional Features | ✅ Ghost Mode, Safe Calc, Bystander ARMY, AI Risk Shield, Accident Detection |
-| Information Integration | ✅ Medical Vault + License + Vehicle + Location in every SOS |
-| User Interface & Accessibility | ✅ Day/Night adaptive UI, glassmorphism design |
+| Nearby Police & Hospitals | Live emergency markers and routing |
+| Emergency Response | SOS, SMS, WhatsApp, call 112, live location |
+| Accident Support | Accelerometer-based accident detection |
+| Protected Travel | Real protected journey routing and corridor visualization |
+| Innovation | Covert Mode, Safe Calc, route deviation detection, corridor intelligence |
+| Offline Functionality | Local chatbot logic, AsyncStorage data, medical vault, contacts |
+| Reliability | Real-time GPS, Google Directions API, OpenStreetMap emergency infrastructure |
+| Information Integration | Medical, vehicle, license, contacts, and location in SOS flow |
+| User Interface | Operational dark-mode emergency UX |
+| Global Adaptability | Country code support and map-based emergency routing |
 
 ---
 
-## 🔮 Roadmap
+## Current Project Status
 
-- [ ] Offline maps caching
-- [ ] Smartwatch gesture SOS
-- [ ] Community hazard reporting
-- [ ] Road safety challan calculator with geo-fencing
-- [ ] Real-time crash hotspot alerts
-- [ ] Multi-language support
-- [ ] AdMob integration for sustainability
+ROADSoS has evolved from an emergency utility prototype into a coherent intelligent mobility safety system.
+
+Current completed foundation:
+
+- map-first operational interface
+- protected journey routing
+- road-following polyline rendering
+- route progression visualization
+- hospital and police in-app routing
+- covert protection
+- SOS actions
+- accident detection
+- risk-aware map atmosphere
+- medical vault
+- police connect
+- roadside assistance
+- AI safety assistant foundation
+
+Current focus:
+
+- stability
+- polish
+- submission readiness
+- reliable Android demo experience
 
 ---
 
-## 👨‍💻 Author
+## Future Scope
+
+- Advanced route recovery intelligence
+- Guardian live monitoring
+- Smartwatch gesture SOS
+- Offline map caching
+- Predictive accident hotspot detection
+- AI-powered safer route recommendation
+- Multi-language emergency support
+- Urban safety intelligence network
+- Emergency responder dashboard
+- Real-time protected journey sharing
+
+---
+
+## Author
 
 **Abhigyan Singh**
+
 GitHub: [@singhabhigyan007devil-cpu](https://github.com/singhabhigyan007devil-cpu)
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
 ---
 
-> *"Every second matters. Stay calm. Call help fast."* — ROADSoS
+> Every second matters. Stay calm. Call help fast.  
+> — ROADSoS
