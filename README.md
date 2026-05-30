@@ -44,9 +44,16 @@ The platform focuses on:
 Add screenshots here:
 
 ```md
-![ROADSoS Operational Map](./assets/screenshots/home.png)
-![ROADSoS Protected Journey](./assets/screenshots/protected-journey.png)
-![ROADSoS SOS Panel](./assets/screenshots/sos-panel.png)
+![ROADSoS Operational Map](./assets/images/screenshots/home.png)
+![ROADSoS Protected Journey](./assets/images/screenshots/protected-journey.png)
+![ROADSoS AI chatbot](./assets/images/screenshots/ai-chatbot.png)
+![ROADSoS covertmode timer](./assets/images/screenshots/covertmodecheckingtimer.png)
+![ROADSoS covertmode phase 1](./assets/images/screenshots/covertmodephase1.png)
+![ROADSoS escalation mode](./assets/images/screenshots/escalationmode.png)
+![ROADSoS map navigation](./assets/images/screenshots/mapnavigation.png)
+![ROADSoS tools/features](./assets/images/screenshots/tools.png)
+![ROADSoS tools/features contd.](./assets/images/screenshots/toolscontinued.png)
+![ROADSoS tools/text message generted via roadsos](./assets/images/screenshots/textmessage.png)
 ```
 
 ---

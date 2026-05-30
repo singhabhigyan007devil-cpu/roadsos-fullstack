@@ -1179,8 +1179,7 @@ const activateCovertMode = async () => {
             `${createEmergencyMessage()}
 
 Emergency Contacts:
-{savedContacts.join('
-')}`
+${savedContacts.join('\n')}`
           );
 
           Linking.openURL(

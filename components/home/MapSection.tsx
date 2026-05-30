@@ -392,7 +392,7 @@ function MapSection({
             radius={260}
             strokeWidth={1}
             strokeColor="rgba(59,130,246,0.20)"
-            fillColor="rgba(37,99,235,0.06)"
+            fillColor="rgba(45, 98, 212, 0.31)"
           />
         )}
 
