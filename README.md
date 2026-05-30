@@ -41,7 +41,7 @@ The platform focuses on:
 |---|---|---|---|
 | Immersive live map with emergency intelligence | Real road-following protected route | Emergency actions and covert safety | Road safety and first-aid guidance |
 
-Add screenshots here:
+SCREENSHOTS:
 
 ```md
 ![ROADSoS Operational Map](./assets/images/screenshots/home.png)
