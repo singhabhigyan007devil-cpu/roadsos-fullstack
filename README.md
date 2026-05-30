@@ -54,6 +54,7 @@ Add screenshots here:
 ![ROADSoS tools/features](./assets/images/screenshots/tools.png)
 ![ROADSoS tools/features contd.](./assets/images/screenshots/toolscontinued.png)
 ![ROADSoS tools/text message generted via roadsos](./assets/images/screenshots/textmessage.png)
+![ROADSoS accident detection triggered by anomalous movement](./assets/images/screenshots/accidentdetected.png)
 ```
 
 ---
@@ -462,68 +463,6 @@ npx expo run:android --variant release
 
 ---
 
-## Demo Flow
-
-Recommended demo sequence:
-
-1. Open ROADSoS operational dark-mode map
-2. Show nearby hospitals and police markers
-3. Tap a hospital or police marker
-4. Start Protected Journey
-5. Show real road-following route inside ROADSoS
-6. Show protected corridor and route progression
-7. Trigger Covert Protection Mode
-8. Show hidden Safe Calc trigger
-9. Simulate accident detection or SOS flow
-10. Show emergency message with live location, vehicle, license, and medical details
-
----
-
-## Evaluation Criteria Coverage
-
-| Criteria | ROADSoS Implementation |
-|---|---|
-| Nearby Police & Hospitals | Live emergency markers and routing |
-| Emergency Response | SOS, SMS, WhatsApp, call 112, live location |
-| Accident Support | Accelerometer-based accident detection |
-| Protected Travel | Real protected journey routing and corridor visualization |
-| Innovation | Covert Mode, Safe Calc, route deviation detection, corridor intelligence |
-| Offline Functionality | Local chatbot logic, AsyncStorage data, medical vault, contacts |
-| Reliability | Real-time GPS, Google Directions API, OpenStreetMap emergency infrastructure |
-| Information Integration | Medical, vehicle, license, contacts, and location in SOS flow |
-| User Interface | Operational dark-mode emergency UX |
-| Global Adaptability | Country code support and map-based emergency routing |
-
----
-
-## Current Project Status
-
-ROADSoS has evolved from an emergency utility prototype into a coherent intelligent mobility safety system.
-
-Current completed foundation:
-
-- map-first operational interface
-- protected journey routing
-- road-following polyline rendering
-- route progression visualization
-- hospital and police in-app routing
-- covert protection
-- SOS actions
-- accident detection
-- risk-aware map atmosphere
-- medical vault
-- police connect
-- roadside assistance
-- AI safety assistant foundation
-
-Current focus:
-
-- stability
-- polish
-- submission readiness
-- reliable Android demo experience
-
----
 
 ## Future Scope
 
