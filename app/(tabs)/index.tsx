@@ -633,7 +633,7 @@ const formatTripTime = (seconds: number) => {
   const updateThemeBySunset = (lat: number, lon: number) => {
     const times = SunCalc.getTimes(new Date(), lat, lon);
     const now = new Date();
-    setIsNight(now < times.sunrise || now > times.sunset);
+    setIsNight(true);
   };
 
   const locationWatcher = useRef<Location.LocationSubscription | null>(null);
