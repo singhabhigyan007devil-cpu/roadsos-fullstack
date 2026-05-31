@@ -43,20 +43,22 @@ The platform focuses on:
 
 SCREENSHOTS:
 
-```md
-![ROADSoS Operational Map](./assets/images/screenshots/home.png)
-![ROADSoS Protected Journey](./assets/images/screenshots/protected-journey.png)
-![ROADSoS AI chatbot](./assets/images/screenshots/ai-chatbot.png)
-![ROADSoS covertmode timer](./assets/images/screenshots/covertmodecheckingtimer.png)
-![ROADSoS covertmode phase 1](./assets/images/screenshots/covertmodephase1.png)
-![ROADSoS escalation mode](./assets/images/screenshots/escalationmode.png)
-![ROADSoS map navigation](./assets/images/screenshots/mapnavigation.png)
-![ROADSoS tools/features](./assets/images/screenshots/tools.png)
-![ROADSoS tools/features contd.](./assets/images/screenshots/toolscontinued.png)
-![ROADSoS tools/text message generted via roadsos](./assets/images/screenshots/textmessage.png)
-![ROADSoS accident detection triggered by anomalous movement](./assets/images/screenshots/accidentdetected.png)
-<img src="./assets/images/screenshots/home.png" width="250"/>
-```
+# Screenshots
+
+<p align="center">
+  <img src="./assets/images/screenshots/home.png" width="250"/>
+  <img src="./assets/images/screenshots/protected-journey.png" width="250"/>
+  <img src="./assets/images/screenshots/ai-chatbot.png" width="250"/>
+  <img src="./assets/images/screenshots/covertmodecheckingtimer.png" width="250"/>
+  <img src="./assets/images/screenshots/covertmodephase1.png" width="250"/>
+  <img src="./assets/images/screenshots/escalationmode.png" width="250"/>
+  <img src="./assets/images/screenshots/mapnavigation.png" width="250"/>
+  <img src="./assets/images/screenshots/tools.png" width="250"/>
+  <img src="./assets/images/screenshots/toolscontinued.png" width="250"/>
+  <img src="./assets/images/screenshots/textmessage.png" width="250"/>
+  <img src="./assets/images/screenshots/accidentdetected.png" width="250"/>
+</p>
+
 
 ---
 
