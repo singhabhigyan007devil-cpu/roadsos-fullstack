@@ -55,6 +55,7 @@ SCREENSHOTS:
 ![ROADSoS tools/features contd.](./assets/images/screenshots/toolscontinued.png)
 ![ROADSoS tools/text message generted via roadsos](./assets/images/screenshots/textmessage.png)
 ![ROADSoS accident detection triggered by anomalous movement](./assets/images/screenshots/accidentdetected.png)
+<img src="./assets/images/screenshots/home.png" width="250"/>
 ```
 
 ---
