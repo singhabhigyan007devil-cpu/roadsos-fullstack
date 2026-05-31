@@ -1,6 +1,12 @@
 # ROADSoS
 Built for IIT Madras COERS Road Safety Hackathon 2026.
 
+![Platform](https://img.shields.io/badge/platform-Android-blue)
+![React Native](https://img.shields.io/badge/React%20Native-0.79-green)
+![Expo](https://img.shields.io/badge/Expo-black)
+![License](https://img.shields.io/badge/license-MIT-yellow)
+
+
 ## AI-Powered Intelligent Safety Operating System for Protected Mobility
 
 ROADSoS is a mobile-first intelligent road safety and emergency response platform designed for protected journeys, silent safety, accident response, and AI-assisted situational awareness.
