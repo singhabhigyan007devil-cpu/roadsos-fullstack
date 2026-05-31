@@ -1,4 +1,5 @@
 # ROADSoS
+Built for IIT Madras COERS Road Safety Hackathon 2026.
 
 ## AI-Powered Intelligent Safety Operating System for Protected Mobility
 
@@ -7,6 +8,26 @@ ROADSoS is a mobile-first intelligent road safety and emergency response platfor
 Unlike traditional emergency apps, ROADSoS is built as a map-first personal safety operating system. It focuses on intelligent protection before, during, and after road emergencies through immersive live maps, protected routing, covert safety, and calm emergency UX.
 
 Built for the **IIT Madras COERS Road Safety Hackathon 2026**.
+
+---
+
+## Team
+
+This project was conceptualized, designed, and developed as a solo hackathon submission by:
+
+| Name | Role |
+|---|---|
+| Abhigyan Singh | Full Stack Development, UI/UX Design, AI Integration, Emergency Workflow Design, Maps & Safety Systems |
+
+---
+
+## Problem Statement
+
+Road accidents and unsafe travel situations often suffer from delayed emergency response, lack of intelligent safety supervision, poor situational awareness, and inaccessible emergency infrastructure.
+
+Most existing emergency apps focus only on panic-button behavior and fail to provide continuous journey protection, covert safety workflows, intelligent route supervision, or emotionally trustworthy emergency experiences.
+
+ROADSoS aims to solve this by building an AI-powered intelligent road safety operating system focused on protected mobility, silent escalation, accident response, and real-time situational awareness.
 
 ---
 
@@ -41,9 +62,9 @@ The platform focuses on:
 |---|---|---|---|
 | Immersive live map with emergency intelligence | Real road-following protected route | Emergency actions and covert safety | Road safety and first-aid guidance |
 
-SCREENSHOTS:
 
-# Screenshots
+
+
 
 <p align="center">
   <img src="./assets/images/screenshots/home.png" width="250"/>
@@ -262,6 +283,19 @@ ROADSoS includes roadside assistance flows for:
 - EV charging support
 
 The app prepares location-aware assistance requests.
+
+---
+
+## Demo Workflow
+
+1. User starts a protected journey inside ROADSoS.
+2. The app generates a real road-following protected corridor.
+3. AI Risk Shield monitors contextual safety signals.
+4. Nearby hospitals and police stations become accessible through intelligent map overlays.
+5. If suspicious movement or danger is detected, the user can activate covert safety workflows.
+6. In case of an accident, accelerometer-based anomaly detection triggers emergency escalation.
+7. Emergency contacts receive live location, medical details, and vehicle information instantly.
+8. The AI Safety Assistant guides users through emergency situations calmly and step-by-step.
 
 ---
 
