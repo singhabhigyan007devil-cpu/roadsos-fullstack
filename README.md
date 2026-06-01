@@ -375,6 +375,8 @@ Every interface element must justify stealing attention from the map.
 
 The design direction prioritizes:
 
+
+- Double-tap map focus mode for distraction-free situational awareness
 - map dominance
 - dark operational atmosphere
 - minimal emergency friction
